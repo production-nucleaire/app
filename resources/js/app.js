@@ -5,6 +5,16 @@ import 'leaflet/dist/leaflet.css';
 
 import rivers from './rivers';
 
+window.addEventListener('reactor-selected', event => {
+    const { slug, reactor } = event.detail[0] ?? {};
+    history.replaceState(null, '', `/` + slug + `/tranche/` + reactor);
+});
+
+window.addEventListener('plant-selected', event => {
+    const { slug } = event.detail[0] ?? {};
+    history.replaceState(null, '', `/` + slug);
+});
+
 const createPlantMarker = (plant) => {
 
     let svg = '';
@@ -24,8 +34,7 @@ const createPlantMarker = (plant) => {
         popupAnchor: [0, -40]
     });
 
-    const marker = L.marker([plant.lat, plant.lng], { icon, riseOnHover: true })
-        .bindPopup(`<strong>${plant.name}</strong><br>${plant.active_reactors}/${plant.total_reactors} reactors producing`);
+    const marker = L.marker([plant.lat, plant.lng], { icon, riseOnHover: true });
 
     marker.on('click', () => {
         window.dispatchEvent(new CustomEvent('select-plant', { detail: { plantId: plant.id } }));

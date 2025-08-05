@@ -11,14 +11,12 @@ use Livewire\Attributes\Computed;
 
 class PlantMap extends Component
 {
-    #[Url(as: 'plant')]
-    public int $selectedPlantId = 0;
-
-    #[Url(as: 'reactor')]
-    public int $selectedReactorId = 0;
-
     #[Url(as: 'day')]
     public ?string $day = null;
+
+    public int $selectedPlantId = 0;
+
+    public int $selectedReactorId = 0;
 
     public ?Plant $previousPlant = null;
     public ?Plant $nextPlant = null;
@@ -26,8 +24,27 @@ class PlantMap extends Component
     public ?Plant $selectedPlant = null;
     public ?Reactor $selectedReactor = null;
 
-    public function mount()
+    public function mount(?string $slug = null, ?int $reactor = null)
     {
+        if ($slug) {
+            $plant = Plant::query()
+                ->where('slug', $slug)
+                ->orWhere('name', $slug)
+                ->first();
+
+            if ($plant) {
+                $this->selectedPlantId = $plant->id;
+                if ($reactor) {
+                    $reactor = Reactor::where('plant_id', $this->selectedPlantId)
+                        ->where('reactor_index', $reactor)
+                        ->first();
+                    if ($reactor) {
+                        $this->selectedReactorId = $reactor->id;
+                    }
+                }
+            }
+        }
+
         if ($this->selectedPlantId) {
             $this->selectedPlant = Plant::find($this->selectedPlantId);
 
@@ -51,12 +68,20 @@ class PlantMap extends Component
         $this->selectedPlant = Plant::find($value);
         $this->setNavigation();
 
-        $this->dispatch('plant-selected', ['plantId' => $this->selectedPlantId]);
+        $this->selectedReactorId = 0;
+        $this->selectedReactor = null;
+
+        $this->dispatch('plant-selected', ['plantId' => $this->selectedPlantId, 'slug' => $this->selectedPlant->slug]);
     }
 
     public function updatedSelectedReactorId($value)
     {
         $this->selectedReactor = Reactor::find($value);
+
+        $this->dispatch('reactor-selected', [
+            'slug' => $this->selectedPlant->slug,
+            'reactor' => $this->selectedReactor->reactor_index,
+        ]);
     }
 
     #[On('select-plant')]
@@ -66,7 +91,7 @@ class PlantMap extends Component
         $this->selectedPlant = Plant::find($plantId);
         $this->setNavigation();
 
-        $this->dispatch('plant-selected', ['plantId' => $plantId]);
+        $this->dispatch('plant-selected', ['plantId' => $plantId, 'slug' => $this->selectedPlant->slug]);
     }
 
     #[Computed]
@@ -76,6 +101,7 @@ class PlantMap extends Component
             ->map(fn ($plant) => [
                 'id' => $plant->id,
                 'name' => $plant->name,
+                'slug' => $plant->slug,
                 'lat' => $plant->latitude,
                 'lng' => $plant->longitude,
                 'active_reactors' => $plant->reactors->filter(function ($reactor) {
@@ -96,7 +122,7 @@ class PlantMap extends Component
             ->with(['reactors' => function ($query) {
                 $query->select('id', 'plant_id', 'net_power_mw', 'reactor_index');
             }])
-            ->select('id', 'name', 'latitude', 'longitude')
+            ->select('id', 'name', 'slug', 'latitude', 'longitude')
             ->whereHas('reactors')
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')

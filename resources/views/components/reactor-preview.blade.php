@@ -7,11 +7,11 @@
     <div class="flex flex-col">
         <span class="text-sm font-semibold text-slate-600">{{ $reactor->name }}</span>
         <span class="text-xs text-slate-500">
-            {{ $reactor->stage }}&nbsp;<span class="font-semibold">&middot;</span>&nbsp;{{ $reactor->net_power_mw }}&nbsp;MW
+            {{ $reactor->stage }}&nbsp;<span class="font-semibold">&middot;</span>&nbsp;{{ Number::format($reactor->net_power_mw, locale: 'fr') }}&nbsp;MW
         </span>
     </div>
     <div class="font-semibold text-right ml-auto">
-        <div class="text-sm text-slate-900">{{ $reactor->latestRecord->value }}&nbsp;MW</div>
+        <div class="text-sm text-slate-900">{{ Number::format($reactor->latestRecord->value, locale: 'fr') }}&nbsp;MW</div>
         <div class="text-xs text-slate-500">{{ $reactor->latestRecord->percent_value }}%</div>
     </div>
 </div>
