@@ -4,7 +4,6 @@ namespace App\Livewire;
 
 use App\Models\Plant;
 use App\Models\Reactor;
-use Carbon\Carbon;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
@@ -51,6 +50,8 @@ class PlantMap extends Component
     {
         $this->selectedPlant = Plant::find($value);
         $this->setNavigation();
+
+        $this->dispatch('plant-selected', ['plantId' => $this->selectedPlantId]);
     }
 
     public function updatedSelectedReactorId($value)
@@ -72,19 +73,20 @@ class PlantMap extends Component
     public function markers()
     {
         return $this->plants
-            ->map(function ($plant) {
-                return [
-                    'id' => $plant->id,
-                    'name' => $plant->name,
-                    'lat' => $plant->latitude,
-                    'lng' => $plant->longitude,
-                    'active_reactors' => $plant->reactors()->whereHas('records', function ($query) {
-                        $query->where('date', '>=', now()->subHour());
-                        $query->where('value', '>', 0);
-                    })->count(),
-                    'total_reactors' => $plant->reactors->count(),
-                ];
-            })->toArray();
+            ->map(fn ($plant) => [
+                'id' => $plant->id,
+                'name' => $plant->name,
+                'lat' => $plant->latitude,
+                'lng' => $plant->longitude,
+                'active_reactors' => $plant->reactors->filter(function ($reactor) {
+                    $record = $reactor->records()
+                        ->where('date', '>=', now()->subHour())
+                        ->latest('date')
+                        ->first();
+                    return $record && $record->percent_value >= 5;
+                })->count(),
+                'total_reactors' => $plant->reactors->count(),
+            ])->toArray();
     }
 
     #[Computed]
@@ -92,17 +94,12 @@ class PlantMap extends Component
     {
         return Plant::query()
             ->with(['reactors' => function ($query) {
-                $query->select('id', 'plant_id', 'reactor_index');
+                $query->select('id', 'plant_id', 'net_power_mw', 'reactor_index');
             }])
             ->select('id', 'name', 'latitude', 'longitude')
             ->whereHas('reactors')
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->get();
-    }
-
-    public function render()
-    {
-        return view('livewire.plant-map');
     }
 }
