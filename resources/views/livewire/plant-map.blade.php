@@ -9,7 +9,15 @@
             <x-plant-list :plants="$this->plants" />
         @endif
     </div>
-    <div wire:ignore id="map" class="w-full h-full rounded-2xl"></div>
+    <div wire:ignore id="map" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-2xl">
+        <img class="w-16 h-16 animate-pulse" src="{{ Vite::asset('resources/images/logo.svg') }}" alt="" />
+        <div class="flex flex-col items-center justify-center mt-4">
+            <div class="text-xs font-medium text-slate-500">Chargement de la carte...</div>
+        </div>
+        <noscript>
+            <span class="text-xs font-medium text-rose-500">JavaScript est désactivé</span>
+        </noscript>
+    </div>
 </div>
 
 @script

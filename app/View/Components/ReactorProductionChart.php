@@ -175,8 +175,12 @@ class ReactorProductionChart extends Component
         // Output SVG
         return <<<SVG
             <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" class="w-80 h-48 mb-4">
+                <linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="256" x2="256" y1="407" y2="105">
+                    <stop offset="0" stop-color="#00c950"></stop>
+                    <stop offset="1" stop-color="#05df72"></stop>
+                </linearGradient>
                 <!-- Area -->
-                <path d="$path" class="fill-green-500" stroke="none"/>
+                <path d="$path" fill="url(#gradient)" stroke="none"/>
                 <!-- Line -->
                 <path d="M {$points[0][0]},{$points[0][1]} " 
                     stroke="#057f34" stroke-width="2" fill="none"

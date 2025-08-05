@@ -1,6 +1,6 @@
 <div class="flex items-center gap-2">
     <div class="w-8 h-10 flex bg-white border border-slate-950 rounded-t-xl overflow-hidden" style="--height:{{ $reactor->latestRecord->percent_value ?? 0 }}%">
-        <div class="relative w-full h-[var(--height)] bg-green-500 mt-auto">
+        <div class="relative w-full h-[var(--height)] bg-gradient-to-b from-green-400 to-green-500 mt-auto">
             <div class="absolute -bottom-px -left-px w-4 h-4 flex items-center justify-center bg-white border border-slate-950 text-[.65rem] font-bold text-slate-950">{{ $reactor->reactor_index }}</div>
         </div>
     </div>
