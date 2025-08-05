@@ -6,7 +6,7 @@
             <x-plant-reactors :selectedPlant="$selectedPlant" :selectedReactor="$selectedReactor" :day="$day" />
             <x-plant-navigation :previousPlant="$previousPlant" :nextPlant="$nextPlant" />
         @else
-            <x-plant-list :plants="$this->plants" />
+            <x-plant-list :plants="$this->markers" />
         @endif
     </div>
     <div wire:ignore id="map" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-2xl">

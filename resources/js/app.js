@@ -11,8 +11,11 @@ window.addEventListener('reactor-selected', event => {
 });
 
 window.addEventListener('plant-selected', event => {
-    const { slug } = event.detail[0] ?? {};
-    history.replaceState(null, '', `/` + slug);
+    const { plantId, slug } = event.detail[0] ?? {};
+    history.replaceState(null, '', `/` + (slug ?? ''));
+    if (plantId) {
+        selectPlantMarker(plantId);
+    }
 });
 
 const createPlantMarker = (plant) => {
@@ -61,11 +64,29 @@ const selectPlantMarker = window.selectPlantMarker = (id) => {
     }
 }
 
-document.addEventListener('plant-selected', (event) => {
-    if (event?.detail[0]?.plantId) {
-        selectPlantMarker(event.detail[0].plantId);
-    }
-});
+const highlightPlantMarker = window.highlightPlantMarker = (id) => {
+    // const marker = window.plantMarkers[`plant-${id}`];
+    // if (marker) {
+    //     marker._icon.classList.add('highlighted-marker');
+    //     const source = marker._icon?.querySelector('img')?.src;
+    //     if (source) {
+    //         const highlightedSource = source.replace('.svg', '-selected.svg');
+    //         marker._icon.querySelector('img').src = highlightedSource;
+    //     }
+    // }
+}
+
+const unhighlightPlantMarker = window.unhighlightPlantMarker = (id) => {
+    // const marker = window.plantMarkers[`plant-${id}`];
+    // if (marker) {
+    //     marker._icon.classList.remove('highlighted-marker');
+    //     const source = marker._icon?.querySelector('img')?.src;
+    //     if (source) {
+    //         const unhighlightedSource = source.replace('-selected.svg', '.svg');
+    //         marker._icon.querySelector('img').src = unhighlightedSource;
+    //     }
+    // }
+}
 
 const createPlantMap = window.createPlantMap = (plants) => {
 

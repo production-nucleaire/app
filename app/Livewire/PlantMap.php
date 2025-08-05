@@ -71,7 +71,7 @@ class PlantMap extends Component
         $this->selectedReactorId = 0;
         $this->selectedReactor = null;
 
-        $this->dispatch('plant-selected', ['plantId' => $this->selectedPlantId, 'slug' => $this->selectedPlant->slug]);
+        $this->dispatch('plant-selected', ['plantId' => $this->selectedPlantId, 'slug' => $this->selectedPlant?->slug]);
     }
 
     public function updatedSelectedReactorId($value)
@@ -91,7 +91,7 @@ class PlantMap extends Component
         $this->selectedPlant = Plant::find($plantId);
         $this->setNavigation();
 
-        $this->dispatch('plant-selected', ['plantId' => $plantId, 'slug' => $this->selectedPlant->slug]);
+        $this->dispatch('plant-selected', ['plantId' => $plantId, 'slug' => $this->selectedPlant?->slug]);
     }
 
     #[Computed]
@@ -112,6 +112,9 @@ class PlantMap extends Component
                     return $record && $record->percent_value >= 5;
                 })->count(),
                 'total_reactors' => $plant->reactors->count(),
+                'latest_production_mw' => $plant->latest_production_mw,
+                'total_production_mw' => $plant->total_production_mw,
+                'percent_value' => $plant->percent_value,
             ])->toArray();
     }
 

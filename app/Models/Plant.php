@@ -42,4 +42,40 @@ class Plant extends Model
     {
         return $this->hasMany(Reactor::class);
     }
+
+    /**
+     * Get the records for the plant.
+     */
+    public function records()
+    {
+        return $this->hasManyThrough(Record::class, Reactor::class);
+    }
+
+    public function getLatestProductionMwAttribute(): float
+    {
+        return $this->reactors
+            ->map(function ($reactor) {
+                return $reactor->records()
+                    ->latest('date')
+                    ->first()?->value ?? 0;
+            })
+            ->sum();
+    }
+
+    /**
+     * Get the total production for the plant.
+     */
+    public function getTotalProductionMwAttribute(): float
+    {
+        return $this->reactors
+            ->map(function ($reactor) {
+                return $reactor->net_power_mw;
+            })
+            ->sum();
+    }
+
+    public function getPercentValueAttribute(): float
+    {
+        return $this->latest_production_mw / $this->total_production_mw * 100;
+    }
 }

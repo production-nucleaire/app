@@ -9,7 +9,8 @@
 @import "@fontsource/open-sans/600.css";
 @import "@fontsource/open-sans/700.css";
 
+@import 'microtip/microtip';
+
 @theme {
-    --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Open Sans', sans-serif;
 }
