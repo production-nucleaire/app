@@ -1,6 +1,7 @@
 <?php
 
+use App\Livewire\PlantMap;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn () => view('welcome'))
+Route::get('/', PlantMap::class)
     ->name('welcome');
