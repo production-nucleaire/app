@@ -17,7 +17,7 @@ class ImportRteData extends Command
      *
      * @var string
      */
-    protected $signature = 'app:import-rte-data';
+    protected $signature = 'app:import-rte-data {--start= : Start date in YYYY-MM-DD format} {--end= : End date in YYYY-MM-DD format}';
 
     /**
      * The console command description.
@@ -31,16 +31,31 @@ class ImportRteData extends Command
      */
     public function handle()
     {
-        $now = now();
-        $start = $now->copy()->subDays(4)->startOfDay();
+        $start = $this->option('start')
+            ? Carbon::parse($this->option('start'))->startOfDay()
+            : now()->subDays(6)->startOfDay();
+        $end = $this->option('end')
+            ? Carbon::parse($this->option('end'))->endOfDay()
+            : now();
 
         $this->info('Fetching data from RTE API...');
 
-        $this->info('Start: ' . $start->format(DATE_ATOM) . ', End: ' . $now->format(DATE_ATOM));
+        $this->info('Start: ' . $start->format(DATE_ATOM) . ', End: ' . $end->format(DATE_ATOM));
 
         // die();
 
-        $data = app(RteApiService::class)->fetchGenerationPerUnit();
+        try {
+            $data = app(RteApiService::class)->fetchGenerationPerUnit($start, $end);
+        } catch (\Exception $e) {
+            $this->error('Error fetching data from RTE API');
+            $this->info($e->getMessage());
+            return;
+        }
+
+        if (empty($data)) {
+            $this->info('No data found for the specified period.');
+            return;
+        }
 
         foreach ($data as $entry) {
 
@@ -64,5 +79,9 @@ class ImportRteData extends Command
                 ]);
             }
         }
+
+        $this->info('Data import completed successfully.');
+
+        cache()->forever('rte:last_successful_import', now()->format('Y-m-d H:i:s'));
     }
 }
