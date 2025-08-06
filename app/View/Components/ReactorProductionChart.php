@@ -38,7 +38,7 @@ class ReactorProductionChart extends Component
             ->sortBy('date')
             ->map(function ($record) {
                 return [
-                    'date' => $record->date->format('d/m/Y H:i:s'),
+                    'date' => $record->date->format('Y-m-d H:i:s'),
                     'time' => $record->date->format('H:i'),
                     'value' => $record->value,
                     'percent_value' => $record->percent_value,
@@ -57,8 +57,8 @@ class ReactorProductionChart extends Component
         // Normalize data to 24 hourly slots
         $data = array_fill(0, 24, null);
         foreach ($this->records as $record) {
-            $hour = (int) date('G', strtotime($record['date']));
-            $data[$hour] = $record['value'];
+            $hour = Carbon::parse($record['date'])->hour;
+            $data[$hour] = (int) $record['value'];
         }
 
         // Fill missing hours (interpolate or set to 0)
