@@ -1,5 +1,5 @@
-<div class="relative w-[calc(100dvw-2rem)] h-[calc(100dvh-2rem)] flex gap-4">
-    <div class="w-full max-w-96 flex flex-col gap-4 bg-white rounded-2xl overflow-auto p-4 z-[9999]">
+<div class="relative w-[calc(100dvw-1rem)] h-[calc(100dvh-1rem)] flex gap-2">
+    <div class="w-full max-w-96 flex flex-col gap-4 bg-white rounded-md overflow-auto p-4 z-[9999]">
         @if ($selectedPlant)
             <x-plant-selector :selectedPlant="$selectedPlant" :plants="$this->plants" />
             <x-plant-preview :plant="$selectedPlant" />
@@ -9,8 +9,8 @@
             <x-plant-list :plants="$this->markers" />
         @endif
     </div>
-    <div class="w-full h-full flex flex-col gap-4">
-        <div wire:ignore id="map" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-2xl">
+    <div class="w-full h-full flex flex-col gap-2">
+        <div wire:ignore id="map" class="w-full h-full flex flex-col items-center justify-center bg-white rounded-md">
             <img class="w-16 h-16 animate-pulse" src="{{ Vite::asset('resources/images/logo.svg') }}" alt="" />
             <div class="flex flex-col items-center justify-center mt-4">
                 <div class="text-xs font-medium text-slate-500">Chargement de la carte...</div>
@@ -19,7 +19,7 @@
                 <span class="text-xs font-medium text-rose-500">JavaScript est désactivé</span>
             </noscript>
         </div>
-        <div class="h-8 flex items-center justify-between bg-white rounded-2xl text-[.65rem] font-medium text-slate-600 px-4">
+        <div class="h-8 flex items-center justify-between bg-white rounded-md text-[.65rem] font-medium text-slate-600 px-4">
             <span @class([
                 'flex items-center gap-1.5 [&_svg]:w-3 [&_svg]:h-3',
                 'text-rose-900 [&_svg]:fill-rose-700' => now()->subHours(6) >= $lastUpdated,
@@ -33,7 +33,7 @@
                 @endif
                 <span>Dernière mise à jour le <strong>{{ $lastUpdated->format('d/m/Y') }}</strong> à <strong>{{ $lastUpdated->format('H:i') }}</strong>. <a class="text-slate-800 hover:underline" href="">En savoir +</a></span>
             </span>
-            <span>Données fournies par <a class="text-blue-500 hover:underline" href="https://data.rte-france.com/" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
+            <span>Données <a class="text-blue-500 hover:underline" href="https://data.rte-france.com/" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
         </div>
     </div>
 </div>

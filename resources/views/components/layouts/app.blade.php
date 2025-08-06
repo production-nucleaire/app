@@ -9,8 +9,8 @@
         <!-- Styles / Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="flex gap-4 bg-slate-100 p-4">
-        <nav class="w-16 flex flex-col items-center justify-between bg-white rounded-2xl py-4.5">
+    <body class="flex gap-2 bg-slate-400 p-2">
+        <nav class="w-16 flex flex-col items-center justify-between bg-white rounded-md py-4.5">
             <a href="{{ route('welcome') }}">
                 <img class="w-11 h-11" src="{{ Vite::asset('resources/images/logo.svg') }}" alt="">
             </a>
