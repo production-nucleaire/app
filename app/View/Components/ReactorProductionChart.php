@@ -180,9 +180,9 @@ class ReactorProductionChart extends Component
                     <stop offset="1" stop-color="#05df72"></stop>
                 </linearGradient>
                 <!-- Area -->
-                <path d="$path" fill="url(#gradient)" stroke="none"/>
+                <path id="area-chart" d="$path" fill="url(#gradient)" stroke="none"/>
                 <!-- Line -->
-                <path d="M {$points[0][0]},{$points[0][1]} " 
+                <path id="line-chart" d="M {$points[0][0]},{$points[0][1]} " 
                     stroke="#057f34" stroke-width="2" fill="none"
                     d="$path" />
                 <!-- Time areas -->

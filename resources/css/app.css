@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
@@ -14,3 +16,32 @@
 @theme {
     --font-sans: 'Open Sans', sans-serif;
 }
+
+button {
+    @apply cursor-pointer transition-colors duration-200 ease-in-out;
+}
+
+/* @media (prefers-color-scheme: dark) { */
+
+    .dark .leaflet-tile-container {
+        background: #111;
+        filter: grayscale(100%) brightness(0.6) contrast(1.2);
+        position: relative;
+    }
+
+    .dark .leaflet-container::after {
+        background: rgb(66, 90, 130);
+        content: '';
+        inset: 0;
+        mix-blend-mode: color;
+        opacity: 0.5;
+        pointer-events: none;
+        position: absolute;
+        z-index: 1000;
+    }
+
+    .dark .leaflet-control-attribution {
+        background: var(--color-slate-800) !important;
+        color: var(--color-slate-200) !important;
+    }
+/* } */

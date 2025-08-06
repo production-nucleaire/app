@@ -3,7 +3,7 @@
     <img class="h-36 object-cover" src="{{ Vite::asset('resources/images/centrale-' . str($plant->name)->lower() . '.jpg') }}" alt="">
 </div>
 <div class="flex items-center justify-between gap-2">
-    <div class="h-7.5 flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-600 rounded px-2 py-1 text-xs font-semibold uppercase px-3 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:fill-blue-600">
+    <div class="h-7.5 flex items-center gap-2 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-600 text-blue-600 dark:text-blue-200 rounded px-2 py-1 text-xs font-semibold uppercase px-3 [&_svg]:w-4 [&_svg]:h-4 [&_svg]:fill-blue-600">
         @if ('SEA' === $plant->cooling_type)
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="m56.5 43c-3 0-5.9-.8-8.2-2.3-2.3 1.5-5.1 2.3-8.1 2.3s-5.9-.8-8.2-2.3c-2.3 1.5-5.2 2.3-8.2 2.3s-5.9-.8-8.2-2.3c-2.3 1.5-5.2 2.3-8.2 2.3-2 0-4.1-.4-5.9-1.1-.5-.2-.8-.8-.6-1.3s.8-.8 1.3-.6c1.6.6 3.3 1 5.1 1 2.8 0 5.5-.8 7.6-2.3.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3 2.8 0 5.5-.8 7.6-2.3.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3s5.5-.8 7.6-2.3c.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3 1.8 0 3.6-.3 5.1-1 .5-.2 1.1 0 1.3.6.2.5 0 1.1-.6 1.3-1.7.7-3.8 1.1-5.8 1.1z"></path><path d="m56.5 49c-3 0-5.9-.8-8.2-2.3-2.3 1.5-5.1 2.3-8.1 2.3s-5.9-.8-8.2-2.3c-2.3 1.5-5.2 2.3-8.2 2.3s-5.9-.8-8.2-2.3c-2.3 1.5-5.2 2.3-8.2 2.3-2 0-4.1-.4-5.9-1.1-.5-.2-.8-.8-.6-1.3s.8-.8 1.3-.6c1.6.6 3.3 1 5.1 1 2.8 0 5.5-.8 7.6-2.3.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3 2.8 0 5.5-.8 7.6-2.3.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3s5.5-.8 7.6-2.3c.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3 1.8 0 3.6-.3 5.1-1 .5-.2 1.1 0 1.3.6s0 1.1-.6 1.3c-1.7.7-3.8 1.1-5.8 1.1z"></path><path d="m57.3 31.3c-1.1 0-2.2-.2-3.3-.8 0 0-.1-.1-.1-.1-1.6-1.1-2.3-2.8-1.8-4.6.4-1.5 1.5-2.7 2.9-3.4-.7-.5-1.5-.9-2.4-.9-2-.2-4.4.9-6.6 3-3.3 3.1-8.8 5.7-12.6 4.7-1.9-.5-3.2-1.9-3.7-3.9-.6-2.3 0-4.4 1.6-5.7s3.9-1.5 6.3-.7c-.3-2.3-2-4.4-4.6-5.7-3.3-1.7-8.6-1.9-13.3 2.5-2.6 2.7-4 4.9-5.2 6.9-2.4 3.9-3.9 6.4-12.2 7.4-.6.1-1-.3-1.1-.9s.3-1 .9-1.1c7.3-.9 8.5-2.8 10.7-6.5 1.2-2 2.7-4.4 5.5-7.3 5.5-5.2 11.6-4.9 15.6-2.9 3.9 2 6.1 5.6 5.7 9.2 0 .3-.2.6-.5.8s-.6.1-.9 0c-2.1-1.2-4.2-1.2-5.5-.2-1 .8-1.3 2.1-.9 3.6.4 1.3 1.1 2.2 2.3 2.5 3 .8 7.8-1.5 10.7-4.2 2.7-2.5 5.6-3.8 8.2-3.6 1.9.2 3.6 1.1 4.9 2.8.2.3.3.7.1 1-.1.3-.5.6-.8.6-1.3.1-2.6 1.1-2.9 2.4-.2.6-.1 1.6 1 2.4 1.9.9 3.6.7 6.7-.6.5-.2 1.1 0 1.3.5s0 1.1-.5 1.3c-2.3 1-3.9 1.5-5.5 1.5z"></path><path d="m56.5 37c-3 0-5.9-.8-8.2-2.3-2.3 1.5-5.1 2.3-8.1 2.3s-5.9-.8-8.2-2.3c-2.3 1.5-5.2 2.3-8.2 2.3s-5.9-.8-8.2-2.3c-2.3 1.5-5.2 2.3-8.2 2.3-2 0-4.1-.4-5.9-1.1-.5-.2-.8-.8-.6-1.3.4-.6 1-.8 1.5-.6 1.6.6 3.3 1 5.1 1 2.8 0 5.5-.8 7.6-2.3.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3 2.8 0 5.5-.8 7.6-2.3.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3s5.5-.8 7.6-2.3c.4-.3.8-.3 1.2 0 2 1.5 4.7 2.3 7.6 2.3 1.8 0 3.6-.3 5.1-1 .5-.2 1.1 0 1.3.6.2.5 0 1.1-.6 1.3-1.9.7-4 1.1-6 1.1z"></path></svg>
             Mer
@@ -13,10 +13,10 @@
         @endif
     </div>
     <div class="flex items-center justify-end gap-2">
-        <a class="w-8 h-8 flex items-center justify-around bg-white border border-slate-200 rounded" href="{{ $plant->edf_link }}" target="_blank" rel="noopener noreferrer">
+        <a class="w-8 h-8 flex items-center justify-around bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded" href="{{ $plant->edf_link }}" target="_blank" rel="noopener noreferrer">
             <img class="w-4 object-cover" src="{{ Vite::asset('resources/images/logo-edf.png') }}" alt="">
         </a>
-        <a class="w-8 h-8 flex items-center justify-around bg-white border border-slate-200 rounded" href="{{ $plant->wiki_link }}" target="_blank" rel="noopener noreferrer">
+        <a class="w-8 h-8 flex items-center justify-around bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 rounded" href="{{ $plant->wiki_link }}" target="_blank" rel="noopener noreferrer">
             <img class="w-5 object-cover" src="{{ Vite::asset('resources/images/logo-wiki.svg') }}" alt="">
         </a>
     </div>
