@@ -7,6 +7,7 @@ use App\Models\Reactor;
 use Livewire\Component;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 
 class PlantMap extends Component
@@ -23,6 +24,8 @@ class PlantMap extends Component
 
     public ?Plant $selectedPlant = null;
     public ?Reactor $selectedReactor = null;
+
+    public ?Carbon $lastUpdated = null;
 
     public function mount(?string $slug = null, ?int $reactor = null)
     {
@@ -54,6 +57,18 @@ class PlantMap extends Component
         if ($this->selectedReactorId) {
             $this->selectedReactor = Reactor::find($this->selectedReactorId);
         }
+
+        $lastUpdated = cache('rte:last_successful_import');
+        if (!$lastUpdated) {
+            $lastUpdated = \App\Models\Record::latest('date')->value('date');
+            if ($lastUpdated) {
+                cache()->forever('rte:last_successful_import', $lastUpdated->format('Y-m-d H:i:s'));
+            }
+        } else {
+            $lastUpdated = Carbon::parse($lastUpdated);
+        }
+
+        $this->lastUpdated = $lastUpdated;
     }
 
     public function setNavigation()
