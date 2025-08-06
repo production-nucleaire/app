@@ -121,7 +121,6 @@ class PlantMap extends Component
                 'lng' => $plant->longitude,
                 'active_reactors' => $plant->reactors->filter(function ($reactor) {
                     $record = $reactor->records()
-                        ->where('date', '>=', now()->subHour())
                         ->latest('date')
                         ->first();
                     return $record && $record->percent_value >= 5;
