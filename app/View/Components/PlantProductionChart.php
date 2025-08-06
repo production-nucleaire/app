@@ -17,15 +17,13 @@ class PlantProductionChart extends Component
 
     public int $maxProduction = 0;
 
-    public Carbon $day;
-
     public ?Carbon $previousDay = null;
     public ?Carbon $nextDay = null;
 
     /**
      * Create a new component instance.
      */
-    public function __construct(int|Plant $plant, ?string $day = null)
+    public function __construct(int|Plant $plant)
     {
         if (is_int($plant)) {
             $this->plant = Plant::findOrFail($plant);
@@ -33,30 +31,23 @@ class PlantProductionChart extends Component
             $this->plant = $plant;
         }
 
-        $this->day = $day ? Carbon::parse($day) : now();
-        $this->previousDay = $this->day->copy()->subDay();
-        $this->nextDay = $this->day->lt(today()) ? $this->day->copy()->addDay() : null;
-
         $this->maxProduction = $this->plant->reactors->sum('net_power_mw') ?? 0;
 
         $this->records = $this->plant->records
             ->whereBetween('date', [
-                $this->day->copy()->startOfDay(),
-                $this->day->copy()->endOfDay(),
+                now()->copy()->subHours(24),
+                now(),
             ])
             ->sortBy('date')
             ->groupBy(function ($record) {
-                // Group by precise datetime (hour) — adjust format if needed
                 return $record->date->format('Y-m-d H:i');
             })
             ->map(function (Collection $group) {
                 $first = $group->first();
-
                 return [
                     'date' => $first->date->format('d/m/Y H:i:s'),
                     'time' => $first->date->format('H:i'),
                     'value' => $group->sum('value'),
-                    // Total percent is meaningless here, skip or compute relative to max
                 ];
             })
             ->values()

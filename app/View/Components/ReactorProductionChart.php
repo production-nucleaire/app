@@ -44,6 +44,21 @@ class ReactorProductionChart extends Component
                     'percent_value' => $record->percent_value,
                 ];
             })->toArray();
+
+            // Double the first hour to ensure the chart start with a full hour
+            // This is to avoid the chart starting at 00:00 with no data visible.
+            if (1 === count($this->records)) {
+                $datetime = Carbon::parse(end($this->records)['date']);
+                if (0 === $datetime->hour) {
+                    $this->records = [
+                        end($this->records),
+                        [
+                            ...end($this->records),
+                            'date' => $datetime->addHour()->format('Y-m-d H:i:s'),
+                        ],
+                    ];
+                }
+            }
     }
 
     public function chart(): string
