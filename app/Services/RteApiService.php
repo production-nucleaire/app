@@ -21,30 +21,52 @@ class RteApiService
 
     public function authenticate()
     {
+        if ($this->token) {
+            return; // Already authenticated
+        }
+
+        // Check if token is cached
+        if (config('services.rte.cache_token', true) && cache()->has('rte_api_token')) {
+            $this->token = cache()->get('rte_api_token');
+            return; // Use cached token
+        }
+
+        // Authenticate with RTE API
         $response = Http::asForm()
             ->withBasicAuth($this->clientId, $this->clientSecret)
             ->post("$this->baseUrl/token/oauth/");
 
+        // Check for successful response
         if ($response->failed()) {
             throw new \Exception('Failed to authenticate with RTE API: ' . $response->body());
         }
 
+        // Parse the response to get the access token
         $response = $response->json();
         if (!isset($response['access_token'])) {
             throw new \Exception('Access token not found in RTE API response.');
         }
 
+        // Store the token for future use
         $this->token = $response['access_token'];
+
+        if (config('services.rte.cache_token', false)) {
+            // Store the token in cache for 30 minutes
+            cache()->put('rte_api_token', $this->token, now()->addMinutes(30));
+            
+        }
     }
 
     public function fetchGenerationPerUnit(?Carbon $start = null, ?Carbon $end = null): ?array
     {
+        // Ensure we have a valid token
         if (!$this->token) {
             $this->authenticate();
         }
 
         $url = "$this->baseUrl/open_api/actual_generation/v1/actual_generations_per_unit";
 
+        // Append start and end dates if provided
         if ($start && $end) {
             $url .= '?' . http_build_query([
                 'start_date' => $start->format(DATE_ATOM),
@@ -52,13 +74,15 @@ class RteApiService
             ]);
         }
 
-        $response = Http::withToken($this->token)
-            ->get($url);
+        // Make the API request
+        $response = Http::withToken($this->token)->get($url);
 
+        // Check for successful response
         if ($response->failed()) {
             throw new \Exception('Failed to fetch data from RTE API (' . $url . ', token ' . $this->token . '): Code ' . $response->status() . ' - ' . $response->body());
         }
 
+        // Parse and return the data
         return $response->json('actual_generations_per_unit');
     }
 }

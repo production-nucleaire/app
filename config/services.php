@@ -36,6 +36,7 @@ return [
     ],
 
     'rte' => [
+        'cache_token' => env('RTE_CACHE_TOKEN', false),
         'client_id' => env('RTE_CLIENT_ID'),
         'client_secret' => env('RTE_CLIENT_SECRET'),
         'base_url' => env('RTE_API_BASE_URL', 'https://digital.iservices.rte-france.com'),
