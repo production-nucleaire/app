@@ -31,7 +31,7 @@
                 </svg>
             </a>
             <ul class="flex md:flex-col gap-2 md:mt-auto">
-                <li x-data="{ open: true }" class="relative" x-on:click.away="open = false">
+                <li x-data="{ open: false }" class="relative" x-on:click.away="open = false">
                     <button class="w-8 h-8 flex items-center justify-center" type="button" x-on:click="open = true">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="w-6 h-6 fill-slate-500 hover:fill-slate-800 dark:hover:fill-slate-200 transition-colors duration-200"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M296 552L296 576L344 576L344 472L296 472L296 552zM296 144L296 168L344 168L344 64L296 64L296 144zM156 122L122 156C129.5 163.5 148.4 182.4 178.6 212.6L195.6 229.6L229.5 195.7C222 188.2 203.1 169.3 172.9 139.1L156 122zM444.5 410.5L410.6 444.4L484.1 517.9L518 484L444.5 410.5zM64 296L64 344L168 344L168 296L64 296zM472 296L472 344L576 344L576 296L472 296zM122 484L156 518C163.5 510.5 182.4 491.6 212.6 461.4L229.6 444.4L195.7 410.5C188.2 418 169.3 436.9 139.1 467.1L122 484zM410.5 195.5L444.4 229.4C451.9 221.9 470.8 203 501 172.8L518 155.9L484 122C476.5 129.5 457.6 148.4 427.4 178.6L410.4 195.6zM320 432C381.9 432 432 381.9 432 320C432 258.1 381.9 208 320 208C258.1 208 208 258.1 208 320C208 381.9 258.1 432 320 432z"/></svg>
                     </button>
