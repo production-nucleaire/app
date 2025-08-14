@@ -4,14 +4,17 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Production nucléaire</title>
+        <title>L’Atome Français - Suivi de la production électro-nucléaire française heure par heure</title>
 
+        @livewireStyles
+        @livewireScripts
+        
         <!-- Styles / Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="flex gap-2 bg-slate-200 dark:bg-slate-700 p-2">
+    <body class="w-screen h-screen flex gap-2 bg-slate-200 dark:bg-slate-700 p-2">
         <nav class="w-16 flex flex-col items-center justify-between bg-white dark:bg-slate-800 rounded-md py-4.5">
-            <a href="{{ route('welcome') }}">
+            <a href="{{ route('home') }}" wire:navigate>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-11 h-11 hover:scale-95 transition-transform duration-200">
                     <linearGradient id="gradient-a" gradientUnits="userSpaceOnUse" x1="256" x2="256" y1="512" y2="-85.333">
                         <stop offset="0" stop-color="#c3ffe8"></stop>

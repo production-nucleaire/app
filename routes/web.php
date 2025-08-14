@@ -4,6 +4,9 @@ use App\Livewire\PlantMap;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', PlantMap::class)
+    ->name('home');
+
+Route::get('/a-propos', fn() => view('welcome'))
     ->name('welcome');
 
 Route::get('/{slug}', PlantMap::class)

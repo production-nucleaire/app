@@ -31,7 +31,7 @@
                 @else
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM344 208L344 352L296 352L296 208L344 208zM296 440L296 392L344 392L344 440L296 440z"/></svg>
                 @endif
-                <span>Dernière mise à jour le <strong>{{ $lastUpdated->format('d/m/Y') }}</strong> à <strong>{{ $lastUpdated->format('H:i') }}</strong>. <a class="text-slate-800 hover:underline" href="">En savoir +</a></span>
+                <span>Dernière mise à jour le <strong>{{ $lastUpdated->format('d/m/Y') }}</strong> à <strong>{{ $lastUpdated->format('H:i') }}</strong>. <a class="text-slate-800 hover:underline" href="{{ route('welcome') }}" wire:navigate>En savoir +</a></span>
             </span>
             <span>Données <a class="text-blue-500 hover:underline" href="https://data.rte-france.com/catalog/-/api/generation/Actual-Generation/v1.1" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
         </div>

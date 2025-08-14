@@ -11,7 +11,7 @@
         </span>
     </div>
     <div class="font-semibold text-right ml-auto">
-        <div class="text-sm text-slate-900 dark:text-slate-300">{{ Number::format($reactor->latestRecord->value, locale: 'fr') }}&nbsp;MW</div>
-        <div class="text-xs text-slate-500 dark:text-slate-400">{{ $reactor->latestRecord->percent_value }}%</div>
+        <div class="text-sm text-slate-900 dark:text-slate-300">{{ Number::format($reactor->latestRecord?->value ?? 0, locale: 'fr') }}&nbsp;MW</div>
+        <div class="text-xs text-slate-500 dark:text-slate-400">{{ $reactor->latestRecord?->percent_value ?? 0 }}%</div>
     </div>
 </div>
