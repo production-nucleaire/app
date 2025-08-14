@@ -11,7 +11,7 @@
         <div class="w-full h-px bg-slate-200 dark:bg-slate-700"></div>
         <div></div>
     </div>
-    <div class="grid gap-2" x-bind:class="mode == 'list' ? 'grid-cols-1' : 'grid-cols-2 md:grid-cols-3'">
+    <div class="grid gap-2" x-bind:class="mode == 'list' ? 'grid-cols-1' : 'grid-cols-3'">
         {{-- Loop through each plant and display it --}}
         @foreach ($plants as $plant)
             <a

@@ -1,5 +1,5 @@
-<div class="relative w-[calc(100dvw-1rem)] h-[calc(100dvh-1rem)] flex gap-2">
-    <div class="w-full max-w-96 flex flex-col gap-4 bg-white dark:bg-slate-800 rounded-md overflow-auto p-4">
+<div class="relative w-[calc(100dvw-1rem)] h-[calc(100dvh-5.5rem)] md:h-[calc(100dvh-1rem)] flex flex-col md:flex-row gap-2">
+    <div @class(['w-full md:max-w-96 h-1/2 md:h-full flex flex-col gap-4 bg-white dark:bg-slate-800 rounded-md overflow-auto p-4', 'h-1/2' => !$selectedPlant, 'h-3/5' => $selectedPlant])>
         @if ($selectedPlant)
             <x-plant-selector :selectedPlant="$selectedPlant" :plants="$this->plants" />
             <x-plant-preview :plant="$selectedPlant" />
@@ -9,7 +9,7 @@
             <x-plant-list :plants="$this->markers" />
         @endif
     </div>
-    <div class="w-full h-full flex flex-col gap-2">
+    <div @class(['w-full h-1/2 md:h-full flex flex-col gap-2', 'h-1/2' => !$selectedPlant, 'h-2/5' => $selectedPlant])>
         <div wire:ignore id="map" class="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-md">
             <img class="w-16 h-16 animate-pulse" src="{{ Vite::asset('resources/images/logo.svg') }}" alt="" />
             <div class="flex flex-col items-center justify-center mt-4">

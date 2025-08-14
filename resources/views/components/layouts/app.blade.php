@@ -12,8 +12,8 @@
         <!-- Styles / Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="w-screen h-screen flex gap-2 bg-slate-200 dark:bg-slate-700 p-2">
-        <nav class="w-16 flex flex-col items-center justify-between bg-white dark:bg-slate-800 rounded-md py-4.5">
+    <body class="w-screen h-screen flex flex-col md:flex-row gap-2 bg-slate-200 dark:bg-slate-700 p-2">
+        <nav class="md:w-16 h-16 md:h-auto flex md:flex-col items-center justify-between shrink-0 bg-white dark:bg-slate-800 rounded-md px-4 md:px-0 md:py-4">
             <a href="{{ route('home') }}" wire:navigate>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-11 h-11 hover:scale-95 transition-transform duration-200">
                     <linearGradient id="gradient-a" gradientUnits="userSpaceOnUse" x1="256" x2="256" y1="512" y2="-85.333">
@@ -30,12 +30,12 @@
                     </g>
                 </svg>
             </a>
-            <ul class="flex flex-col gap-2 mt-auto">
-                <li x-data="{ open: false }" class="relative" x-on:click.away="open = false">
+            <ul class="flex md:flex-col gap-2 md:mt-auto">
+                <li x-data="{ open: true }" class="relative" x-on:click.away="open = false">
                     <button class="w-8 h-8 flex items-center justify-center" type="button" x-on:click="open = true">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="w-6 h-6 fill-slate-500 hover:fill-slate-800 dark:hover:fill-slate-200 transition-colors duration-200"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M296 552L296 576L344 576L344 472L296 472L296 552zM296 144L296 168L344 168L344 64L296 64L296 144zM156 122L122 156C129.5 163.5 148.4 182.4 178.6 212.6L195.6 229.6L229.5 195.7C222 188.2 203.1 169.3 172.9 139.1L156 122zM444.5 410.5L410.6 444.4L484.1 517.9L518 484L444.5 410.5zM64 296L64 344L168 344L168 296L64 296zM472 296L472 344L576 344L576 296L472 296zM122 484L156 518C163.5 510.5 182.4 491.6 212.6 461.4L229.6 444.4L195.7 410.5C188.2 418 169.3 436.9 139.1 467.1L122 484zM410.5 195.5L444.4 229.4C451.9 221.9 470.8 203 501 172.8L518 155.9L484 122C476.5 129.5 457.6 148.4 427.4 178.6L410.4 195.6zM320 432C381.9 432 432 381.9 432 320C432 258.1 381.9 208 320 208C258.1 208 208 258.1 208 320C208 381.9 258.1 432 320 432z"/></svg>
                     </button>
-                    <div class="absolute -left-2 -top-1.5 h-10 flex items-center gap-2 bg-slate-200 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-800 rounded-full px-3 z-1000" x-show="open" x-cloak>
+                    <div class="absolute -left-2 -top-3 md:-top-1.5 w-10 md:w-auto h-auto md:h-10 flex flex-col md:flex-row items-center gap-2 bg-slate-200 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-800 rounded-full md:px-3 py-3 md:py-0 z-1000" x-show="open" x-cloak>
                         <button type="button" x-on:click="localStorage.setItem('theme', 'dark'); document.documentElement.classList.add('dark'); open = false;">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="w-6 h-6 fill-slate-500 dark:fill-slate-300 hover:fill-slate-800 dark:hover:fill-slate-200 transition-colors duration-200"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M512 32L528 80L576 96L528 112L512 160L496 112L448 96L496 80L512 32zM378.7 147.1C302.5 166 246 234.9 246 317C246 413.6 324.3 492 421 492C437.2 492 452.9 489.8 467.8 485.7C427 540.5 361.7 576 288 576C164.3 576 64 475.7 64 352C64 228.3 164.3 128 288 128C320.3 128 351 134.8 378.7 147.1zM448 416L419.2 332.8L336 304L419.2 275.2L448 192L476.8 275.2L560 304L476.8 332.8L448 416z"/></svg>
                         </button>
