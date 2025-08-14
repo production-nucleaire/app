@@ -30,13 +30,13 @@
         @endif
         <div>
             <div class="text-sm font-semibold text-slate-800 dark:text-slate-200 text-center">{{ $day->format('d/m/Y') }}</div>
-            <div
+            {{-- <div
                 x-cloak
-                x-show="selectedRecord"
+                x-show="selectedRecord && selectedRecord.time != '' && selectedRecord.value != ''"
                 class="text-sm text-slate-600 dark:text-slate-200 text-center"
             >
                 À <strong x-text="selectedRecord ? selectedRecord.time : ''"></strong>&nbsp;:&nbsp;<strong x-text="selectedRecord ? selectedRecord.value : ''"></strong> MW (<strong x-text="selectedRecord ? selectedRecord.percent_value : ''"></strong>%)
-            </div>
+            </div> --}}
         </div>
         @if ($nextDay)
             <a href="{{ route('plant', ['slug' => $reactor->plant_id, 'reactor' => $reactor->id, 'day' => $nextDay->format('Y-m-d')]) }}" x-on:click.prevent="$wire.set('day', '{{ $nextDay->format('Y-m-d') }}')" class="w-10 h-10 flex items-center justify-center dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 rounded text-slate-600 hover:text-slate-800">

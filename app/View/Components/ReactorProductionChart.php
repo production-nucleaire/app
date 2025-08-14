@@ -4,9 +4,17 @@ namespace App\View\Components;
 
 use Closure;
 use App\Models\Reactor;
+use Maantje\Charts\Chart;
+use Maantje\Charts\XAxis;
+use Maantje\Charts\YAxis;
+use Maantje\Charts\Line\Line;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Number;
 use Illuminate\View\Component;
+use Maantje\Charts\Line\Lines;
+use Maantje\Charts\Line\Point;
 use Illuminate\Contracts\View\View;
+use Maantje\Charts\Annotations\XAxis\XAxisLineAnnotation;
 
 class ReactorProductionChart extends Component
 {
@@ -63,12 +71,6 @@ class ReactorProductionChart extends Component
 
     public function chart(): string
     {
-        $width = 320;
-        $height = 200;
-        $padding = 50;
-        $chartWidth = $width - 2 * $padding;
-        $chartHeight = $height - 2 * $padding;
-
         // Normalize data to 24 hourly slots
         $data = array_fill(0, 24, null);
         foreach ($this->records as $record) {
@@ -79,137 +81,65 @@ class ReactorProductionChart extends Component
         // Fill missing hours (interpolate or set to 0)
         $data = array_map(fn($v) => $v ?? 0, $data);
 
-        // Scale function
-        $scaleX = fn($i) => $padding + ($i / 23) * $chartWidth;
-        $scaleY = fn($v) => $padding + $chartHeight * (1 - ($v / $this->reactor->net_power_mw));
-
-        // Determine the last non-zero index
-        $lastNonZeroIndex = 0;
-        foreach ($data as $i => $v) {
-            if ($v > 0) {
-                $lastNonZeroIndex = $i;
-            }
+        $steps = [];
+        $last = 0;
+        while ($last <= max($data)) {
+            $steps[] = $last + 250;
+            $last += 250;
         }
 
-        // Build points for path
-        $points = [];
-        foreach ($data as $i => $v) {
-            if ($i > $lastNonZeroIndex) {
-                break; // stop at the last non-zero point
-            }
-
-            $points[] = [$scaleX($i), $scaleY($v)];
+        if (empty($steps)) {
+            $steps = [0, 250, 500, 750, 1000, 1250, 1500, 1750];
         }
 
-        // Smoothing (simple Bézier smoothing)
-        $path = "M {$points[0][0]},{$points[0][1]} ";
-        for ($i = 1; $i < count($points) - 1; $i++) {
-            $xc = ($points[$i][0] + $points[$i + 1][0]) / 2;
-            $yc = ($points[$i][1] + $points[$i + 1][1]) / 2;
-            $path .= "Q {$points[$i][0]},{$points[$i][1]} $xc,$yc ";
-        }
+        $chart = new Chart(
+            width: 320,
+            height: 200,
+            leftMargin: 0,
+            rightMargin: 20,
+            // bottomMargin: 10,
+            class: 'reactor-production-chart',
+            xAxis: new XAxis(
+                data: [0, 12, 23],
+                formatter: fn ($label) => sprintf('%02d:00', $label),
+                annotations: array_map(function ($i, $value) {
+                    return new XAxisLineAnnotation(
+                        x: $i,
+                        color: '#ccc',
+                        size: 1,
+                        label: sprintf('À %02d:00 : %d MW', $i, $value),
+                        id: "rector-production-chart__annotation-$i",
+                        class: "rector-production-chart__annotation rector-production-chart__annotation-$i",
+                    );
+                }, array_keys($data), $data),
+            ),
+            yAxis: new YAxis(
+                formatter: fn ($label) => Number::format($label, locale: 'fr'),
+                minValue: 0,
+                maxValue: max($steps),
+            ),
+            series: [
+                new Lines(
+                    lines: [
+                        new Line(
+                            id: 'line-a',
+                            class: 'line-a',
+                            points: array_map(
+                                fn($i, $v) => new Point(x: $i, y: max($v ?? 0, 0)),
+                                array_keys($data),
+                                $data
+                            ),
+                            color: '#00c950',
+                            areaColor: '#00c950',
+                            curve: 100,
+                            size: 1,
+                        ),
+                    ],
+                ),
+            ]
+        );
 
-        // Close area
-        $lastX = $points[count($points) - 1][0];
-        $path .= "L $lastX,$height L {$points[0][0]},$height Z";
-
-        $xLabels = [
-            ['hour' => 6, 'label' => '06:00'],
-            ['hour' => 12, 'label' => '12:00'],
-            ['hour' => 18, 'label' => '18:00'],
-        ];
-
-        $xTicks = '';
-        foreach ($xLabels as $label) {
-            $x = $scaleX($label['hour']);
-            $innerText = $label['label'];
-            $y = $height + 15; // Position below the chart
-            $xTicks .= <<<SVG
-                <text x="$x" y="$y" text-anchor="middle" font-size="12" fill="#444">$innerText</text>
-            SVG;
-        }
-
-        $yTicks = '';
-        $divisions = 4;
-        $step = $this->reactor->net_power_mw / $divisions;
-
-        for ($i = 0; $i <= $divisions; $i++) {
-            $value = $i * $step;
-            $x = $padding - 10; // Position to the left of the chart
-            $y = $scaleY($value) - ($i * 10) + 40;
-            $label = $i === $divisions
-                ? round($this->reactor->net_power_mw)
-                : round($value);
-            $yTicks .= <<<SVG
-                <text x="{$x}" y="{$y}" text-anchor="end" alignment-baseline="middle" font-size="12" fill="#444">{$label}</text>
-            SVG;
-        }
-
-        // Time areas
-        $hours = '';
-        foreach ($points as $i => [$x, $y]) {
-            $value = $data[$i];
-            $time = str_pad($i, 2, '0', STR_PAD_LEFT) . ':00';
-
-            // Determine hover region width
-            $x1 = $x - ($chartWidth / 48); // Half of 1/24th of the chart
-            $areaWidth = $chartWidth / 24;
-
-            $record = $this->records[$i] ?? null;
-            $percentValue = $record['percent_value'] ?? 0;
-
-            $hours .= <<<SVG
-                <rect
-                    x="$x1"
-                    y="0"
-                    width="$areaWidth"
-                    height="$height"
-                    fill="transparent"
-                    x-on:mouseover="selectedRecord = { time: '$time', value: $value, percent_value: '$percentValue' }"
-                />
-            SVG;
-        }
-
-        $lines = [
-            [
-                'x1' => $padding,
-                'y1' => $padding,
-                'x2' => $padding,
-                'y2' => $height,
-                'stroke' => '#ccc',
-            ],
-            [
-                'x1' => $padding,
-                'y1' => $height,
-                'x2' => $width - 40,
-                'y2' => $height,
-                'stroke' => '#ccc',
-            ],
-        ];
-
-        // Output SVG
-        return <<<SVG
-            <svg viewBox="0 0 320 240" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" class="w-80 h-48 mb-4">
-                <linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="256" x2="256" y1="407" y2="105">
-                    <stop offset="0" stop-color="#00c950"></stop>
-                    <stop offset="1" stop-color="#05df72"></stop>
-                </linearGradient>
-                <!-- Area -->
-                <path id="area-chart" d="$path" fill="url(#gradient)" stroke="none"/>
-                <!-- Line -->
-                <path id="line-chart" d="M {$points[0][0]},{$points[0][1]} " 
-                    stroke="#057f34" stroke-width="2" fill="none"
-                    d="$path" />
-                <!-- Time areas -->
-                $hours
-                <!-- Axes -->
-                <line x1="{$lines[0]['x1']}" y1="{$lines[0]['y1']}" x2="{$lines[0]['x2']}" y2="{$lines[0]['y2']}" stroke="#ccc"/>
-                <line x1="{$lines[1]['x1']}" y1="{$lines[1]['y1']}" x2="{$lines[1]['x2']}" y2="{$lines[1]['y2']}" stroke="#ccc"/>
-                <!-- Axis Labels -->
-                $xTicks
-                $yTicks
-            </svg>
-        SVG;
+        return $chart->render();
     }
 
     /**

@@ -21,6 +21,14 @@ button {
     @apply cursor-pointer transition-colors duration-200 ease-in-out;
 }
 
+.reactor-production-chart .reactor-production-chart-grid-line {
+    @apply stroke-slate-400 dark:stroke-slate-600;
+}
+
+.reactor-production-chart .rector-production-chart__annotation {
+    @apply opacity-0;
+}
+
 /* @media (prefers-color-scheme: dark) { */
 
     .dark .leaflet-tile-container {

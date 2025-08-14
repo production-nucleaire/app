@@ -8,11 +8,18 @@
         "framework"
     ],
     "license": "MIT",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/caercam/charts"
+        }
+    ],
     "require": {
         "php": "^8.2",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^3.6"
+        "livewire/livewire": "^3.6",
+        "maantje/charts": "dev-main"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
