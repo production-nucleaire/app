@@ -85,4 +85,26 @@ class RteApiService
         // Parse and return the data
         return $response->json('actual_generations_per_unit');
     }
+
+    public function fetchGenerationForUnit(string $eicCode, ?Carbon $date = null): ?array
+    {
+        if (!$date) {
+            $date = now()->subDays(6);
+        }
+
+        $url = "https://www.services-rte.com/cms/open_data/v1/actual_generation_by_group?date={$date->format('d/m/Y')}&unit_eic_code={$eicCode}";
+
+        $response = Http::get($url);
+        if ($response->failed()) {
+            throw new \Exception('Failed to fetch data from RTE API: ' . $response->body());
+        }
+
+        $data = $response->json();
+
+        if (empty($data)) {
+            return null;
+        }
+
+        return $data['values'] ?? null;
+    }
 }

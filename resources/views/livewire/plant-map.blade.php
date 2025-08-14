@@ -33,7 +33,7 @@
                 @endif
                 <span>Dernière mise à jour le <strong>{{ $lastUpdated->format('d/m/Y') }}</strong> à <strong>{{ $lastUpdated->format('H:i') }}</strong>. <a class="text-slate-800 hover:underline" href="">En savoir +</a></span>
             </span>
-            <span>Données <a class="text-blue-500 hover:underline" href="https://data.rte-france.com/" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
+            <span>Données <a class="text-blue-500 hover:underline" href="https://data.rte-france.com/catalog/-/api/generation/Actual-Generation/v1.1" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
         </div>
     </div>
 </div>
