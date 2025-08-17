@@ -51,6 +51,13 @@ class Plant extends Model
         return $this->hasManyThrough(Record::class, Reactor::class);
     }
 
+    public function getActiveReactorsCountAttribute(): int
+    {
+        return $this->reactors
+            ->filter(fn ($r) => $r->latestRecord?->percent_value >= 5)
+            ->count();
+    }
+
     public function getLatestProductionMwAttribute(): float
     {
         return $this->reactors->sum(fn ($r) => $r->latestRecord?->value ?? 0);

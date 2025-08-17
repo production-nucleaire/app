@@ -125,10 +125,8 @@ class PlantMap extends Component
                 'slug' => $plant->slug,
                 'lat' => $plant->latitude,
                 'lng' => $plant->longitude,
-                'active_reactors' => $plant->reactors
-                    ->filter(fn ($r) => $r->latestRecord?->percent_value >= 5)
-                    ->count(),
-                'total_reactors' => $plant->reactors->count(),
+                'active_reactors_count' => $plant->active_reactors_count,
+                'total_reactors_count' => $plant->reactors->count(),
                 'latest_production_mw' => $plant->latest_production_mw,
                 'total_production_mw' => $plant->total_production_mw,
                 'percent_value' => $plant->percent_value,
@@ -140,10 +138,9 @@ class PlantMap extends Component
     {
         return Plant::query()
             ->with([
-                'reactors:id,plant_id,net_power_mw,reactor_index',
+                'reactors:id,name,plant_id,stage,net_power_mw,reactor_index',
                 'reactors.latestRecord.reactor:id,net_power_mw',
             ])
-            ->select('id','name','slug','latitude','longitude')
             ->whereHas('reactors')
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')

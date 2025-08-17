@@ -28,12 +28,12 @@ window.addEventListener('plant-selected', event => {
 const createPlantMarker = (plant) => {
 
     let svg = '';
-    if (!plant.active_reactors) {
+    if (!plant.active_reactors_count) {
         svg = `/storage/markers/marker-empty.svg`;
-    } else if (plant.active_reactors === plant.total_reactors) {
+    } else if (plant.active_reactors_count === plant.total_reactors_count) {
         svg = `/storage/markers/marker-full.svg`;
     } else {
-        svg = `/storage/markers/marker-${plant.active_reactors}-${plant.total_reactors}.svg`;
+        svg = `/storage/markers/marker-${plant.active_reactors_count}-${plant.total_reactors_count}.svg`;
     }
 
     const icon = L.divIcon({

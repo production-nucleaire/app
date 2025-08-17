@@ -25,7 +25,7 @@
             >
                 <div>
                     <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $plant->name }}</h3>
-                    <div class="text-[.65rem] font-semibold text-slate-600 dark:text-slate-400">{{ sprintf('%d tranche%s sur %d', $plant->active_reactors, $plant->active_reactors === 1 ? '' : 's', $plant->total_reactors) }}</div>
+                    <div class="text-[.65rem] font-semibold text-slate-600 dark:text-slate-400">{{ sprintf('%d tranche%s sur %d', $plant->active_reactors_count, $plant->active_reactors_count === 1 ? '' : 's', $plant->reactors->count()) }}</div>
                     {{-- <div>{{ Number::format($plant->latest_production_mw, locale: 'fr') . ' sur ' . Number::format($plant->total_production_mw, locale: 'fr') }} MW</div> --}}
                 </div>
                 <div class="flex flex-col items-center flex-shrink-0">
