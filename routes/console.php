@@ -1,8 +1,8 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+if ('production' === app()->environment()) {
+    Schedule::command('app:import-rte-data --unofficial')->hourly();
+    // Schedule::command('app:import-rte-data')->dailyAt('00:00');
+}
