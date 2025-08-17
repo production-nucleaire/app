@@ -6,7 +6,7 @@
             <x-plant-reactors :selectedPlant="$selectedPlant" :selectedReactor="$selectedReactor" :day="$day" />
             <x-plant-navigation :previousPlant="$previousPlant" :nextPlant="$nextPlant" />
         @else
-            <x-plant-list :plants="$this->markers" />
+            <x-plant-list :plants="$this->plants" />
         @endif
     </div>
     <div @class(['w-full h-1/2 md:h-full flex flex-col gap-2', 'h-1/2' => !$selectedPlant, 'h-2/5' => $selectedPlant])>

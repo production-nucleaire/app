@@ -16,24 +16,24 @@
         @foreach ($plants as $plant)
             <a
                 class="flex items-center justify-between bg-slate-50 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-50 dark:border-slate-700 dark:hover:border-slate-600 rounded p-2"
-                href="{{ route('plant', ['slug' => $plant['slug']]) }}"
-                wire:key="plant-{{ $plant['id'] }}"
-                wire:click.prevent="$set('selectedPlantId', {{ $plant['id'] }})"
-                x-on:mouseover="highlightPlantMarker({{ $plant['id'] }})"
-                x-on:mouseout="unhighlightPlantMarker({{ $plant['id'] }})"
+                href="{{ route('plant', ['slug' => $plant->slug]) }}"
+                wire:key="plant-{{ $plant->id }}"
+                wire:click.prevent="$set('selectedPlantId', {{ $plant->id }})"
+                x-on:mouseover="highlightPlantMarker({{ $plant->id }})"
+                x-on:mouseout="unhighlightPlantMarker({{ $plant->id }})"
                 x-bind:class="mode == 'grid' ? 'flex-col gap-2' : 'flex-row'"
             >
                 <div>
-                    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $plant['name'] }}</h3>
-                    <div class="text-[.65rem] font-semibold text-slate-600 dark:text-slate-400">{{ sprintf('%d tranche%s sur %d', $plant['active_reactors'], $plant['active_reactors'] === 1 ? '' : 's', $plant['total_reactors']) }}</div>
-                    {{-- <div>{{ Number::format($plant['latest_production_mw'], locale: 'fr') . ' sur ' . Number::format($plant['total_production_mw'], locale: 'fr') }} MW</div> --}}
+                    <h3 class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ $plant->name }}</h3>
+                    <div class="text-[.65rem] font-semibold text-slate-600 dark:text-slate-400">{{ sprintf('%d tranche%s sur %d', $plant->active_reactors, $plant->active_reactors === 1 ? '' : 's', $plant->total_reactors) }}</div>
+                    {{-- <div>{{ Number::format($plant->latest_production_mw, locale: 'fr') . ' sur ' . Number::format($plant->total_production_mw, locale: 'fr') }} MW</div> --}}
                 </div>
                 <div class="flex flex-col items-center flex-shrink-0">
                     <div class="w-24">
-                        <x-plant-production-chart :plant="$plant['id']" />
+                        <x-plant-production-chart :plant="$plant" />
                     </div>
                     <div class="text-[.65rem] font-bold text-slate-500 -mt-1">
-                        {{ Number::format($plant['latest_production_mw'], locale: 'fr') }}&nbsp;MW ({{ round($plant['percent_value']) }}&nbsp;%)
+                        {{ Number::format($plant->latest_production_mw, locale: 'fr') }}&nbsp;MW ({{ round($plant->percent_value) }}&nbsp;%)
                     </div>
                 </div>
             </a>

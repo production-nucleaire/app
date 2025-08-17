@@ -139,7 +139,11 @@ class ReactorProductionChart extends Component
             ]
         );
 
-        return $chart->render();
+        $svg = $chart->render();
+
+        cache(['reactor_production_chart_' . $this->reactor->id => $svg], now()->addMinutes(10));
+
+        return $svg;
     }
 
     /**
@@ -147,8 +151,12 @@ class ReactorProductionChart extends Component
      */
     public function render(): View|Closure|string
     {
+        $chart = cache('reactor_production_chart_' . $this->reactor->id, function () {
+            return $this->chart();
+        });
+
         return view('components.reactor-production-chart', [
-            'chart' => $this->chart(),
+            'chart' => $chart,
         ]);
     }
 }

@@ -25,28 +25,23 @@ class PlantProductionChart extends Component
      */
     public function __construct(int|Plant $plant)
     {
-        if (is_int($plant)) {
-            $this->plant = Plant::findOrFail($plant);
-        } else {
-            $this->plant = $plant;
-        }
+        $this->plant = $plant;
 
         $this->maxProduction = $this->plant->reactors->sum('net_power_mw') ?? 0;
 
-        $this->records = $this->plant->records
+        $this->records = $this->plant->records()
             ->whereBetween('date', [
                 now()->copy()->subHours(24),
                 now(),
             ])
-            ->sortBy('date')
-            ->groupBy(function ($record) {
-                return $record->date->format('Y-m-d H:i');
-            })
+            ->orderBy('date')
+            ->get()
+            ->groupBy(fn ($record) => $record->date->format('Y-m-d H:i'))
             ->map(function (Collection $group) {
                 $first = $group->first();
                 return [
-                    'date' => $first->date->format('d/m/Y H:i:s'),
-                    'time' => $first->date->format('H:i'),
+                    'date'  => $first->date->format('d/m/Y H:i:s'),
+                    'time'  => $first->date->format('H:i'),
                     'value' => $group->sum('value'),
                 ];
             })
@@ -54,7 +49,7 @@ class PlantProductionChart extends Component
             ->toArray();
     }
 
-    public function chart(): string
+    public function generateChart(): string
     {
         $width = 180;
         $height = 60;
@@ -100,12 +95,15 @@ class PlantProductionChart extends Component
 
         }
 
-        // Output SVG
-        return <<<SVG
+        $svg = <<<SVG
             <svg viewBox="0 0 $width $height" xmlns="http://www.w3.org/2000/svg">
                 $paths
             </svg>
         SVG;
+
+        cache(['plant_production_chart_' . $this->plant->id => $svg], now()->addMinutes(10));
+
+        return $svg;
     }
 
     /**
@@ -113,8 +111,12 @@ class PlantProductionChart extends Component
      */
     public function render(): View|Closure|string
     {
+        $chart = cache('plant_production_chart_' . $this->plant->id, function () {
+            return $this->generateChart();
+        });
+
         return view('components.plant-production-chart', [
-            'chart' => $this->chart(),
+            'chart' => $chart,
         ]);
     }
 }
