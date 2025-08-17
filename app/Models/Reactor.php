@@ -46,9 +46,7 @@ class Reactor extends Model
 
     public function latestRecord()
     {
-        return $this->hasOne(Record::class)
-            ->latest('date')
-            ->select('reactor_id', 'date', 'value');
+        return $this->hasOne(Record::class)->latestOfMany('date');
     }
 
     /**

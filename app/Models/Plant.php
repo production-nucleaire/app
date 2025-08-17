@@ -53,29 +53,17 @@ class Plant extends Model
 
     public function getLatestProductionMwAttribute(): float
     {
-        return $this->reactors
-            ->map(function ($reactor) {
-                return $reactor->records()
-                    ->latest('date')
-                    ->first()?->value ?? 0;
-            })
-            ->sum();
+        return $this->reactors->sum(fn ($r) => $r->latestRecord?->value ?? 0);
     }
 
-    /**
-     * Get the total production for the plant.
-     */
     public function getTotalProductionMwAttribute(): float
     {
-        return $this->reactors
-            ->map(function ($reactor) {
-                return $reactor->net_power_mw;
-            })
-            ->sum();
+        return $this->reactors->sum('net_power_mw');
     }
 
     public function getPercentValueAttribute(): float
     {
-        return $this->latest_production_mw / $this->total_production_mw * 100;
+        $total = $this->total_production_mw;
+        return $total > 0 ? ($this->latest_production_mw / $total * 100) : 0;
     }
 }

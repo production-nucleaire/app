@@ -31,6 +31,7 @@ class PlantMap extends Component
     {
         if ($slug) {
             $plant = Plant::query()
+                ->with(['reactors.latestRecord'])
                 ->where('slug', $slug)
                 ->orWhere('name', $slug)
                 ->first();
@@ -49,13 +50,12 @@ class PlantMap extends Component
         }
 
         if ($this->selectedPlantId) {
-            $this->selectedPlant = Plant::find($this->selectedPlantId);
-
+            $this->selectedPlant = $this->plants->firstWhere('id', $this->selectedPlantId);
             $this->setNavigation();
         }
 
         if ($this->selectedReactorId) {
-            $this->selectedReactor = Reactor::find($this->selectedReactorId);
+            $this->selectedReactor = $this->selectedPlant?->reactors->firstWhere('id', $this->selectedReactorId);
         }
 
         $lastUpdated = cache('rte:last_successful_import');
@@ -73,29 +73,32 @@ class PlantMap extends Component
 
     public function setNavigation()
     {
-        $index = $this->plants->search(fn ($plant) => $plant->id === $this->selectedPlantId);
-        $this->previousPlant = $this->plants->get($index - 1) ?? null;
-        $this->nextPlant = $this->plants->get($index + 1) ?? null;
+        $index = $this->plants->search(fn ($p) => $p->id === $this->selectedPlantId);
+        $this->previousPlant = $this->plants->get($index - 1);
+        $this->nextPlant = $this->plants->get($index + 1);
     }
 
     public function updatedSelectedPlantId($value)
     {
-        $this->selectedPlant = Plant::find($value);
+        $this->selectedPlant = $this->plants->firstWhere('id', $value);
         $this->setNavigation();
 
         $this->selectedReactorId = 0;
         $this->selectedReactor = null;
 
-        $this->dispatch('plant-selected', ['plantId' => $this->selectedPlantId, 'slug' => $this->selectedPlant?->slug]);
+        $this->dispatch('plant-selected', [
+            'plantId' => $this->selectedPlantId,
+            'slug' => $this->selectedPlant?->slug,
+        ]);
     }
 
     public function updatedSelectedReactorId($value)
     {
-        $this->selectedReactor = Reactor::find($value);
+        $this->selectedReactor = $this->selectedPlant?->reactors->firstWhere('id', $value);
 
         $this->dispatch('reactor-selected', [
             'slug' => $this->selectedPlant->slug,
-            'reactor' => $this->selectedReactor->reactor_index,
+            'reactor' => $this->selectedReactor?->reactor_index,
         ]);
     }
 
@@ -103,10 +106,13 @@ class PlantMap extends Component
     public function selectPlant($plantId)
     {
         $this->selectedPlantId = $plantId;
-        $this->selectedPlant = Plant::find($plantId);
+        $this->selectedPlant = $this->plants->firstWhere('id', $plantId);
         $this->setNavigation();
 
-        $this->dispatch('plant-selected', ['plantId' => $plantId, 'slug' => $this->selectedPlant?->slug]);
+        $this->dispatch('plant-selected', [
+            'plantId' => $plantId,
+            'slug' => $this->selectedPlant?->slug,
+        ]);
     }
 
     #[Computed]
@@ -119,12 +125,9 @@ class PlantMap extends Component
                 'slug' => $plant->slug,
                 'lat' => $plant->latitude,
                 'lng' => $plant->longitude,
-                'active_reactors' => $plant->reactors->filter(function ($reactor) {
-                    $record = $reactor->records()
-                        ->latest('date')
-                        ->first();
-                    return $record && $record->percent_value >= 5;
-                })->count(),
+                'active_reactors' => $plant->reactors
+                    ->filter(fn ($r) => $r->latestRecord?->percent_value >= 5)
+                    ->count(),
                 'total_reactors' => $plant->reactors->count(),
                 'latest_production_mw' => $plant->latest_production_mw,
                 'total_production_mw' => $plant->total_production_mw,
@@ -136,10 +139,11 @@ class PlantMap extends Component
     public function plants()
     {
         return Plant::query()
-            ->with(['reactors' => function ($query) {
-                $query->select('id', 'plant_id', 'net_power_mw', 'reactor_index');
-            }])
-            ->select('id', 'name', 'slug', 'latitude', 'longitude')
+            ->with([
+                'reactors:id,plant_id,net_power_mw,reactor_index',
+                'reactors.latestRecord.reactor:id,net_power_mw',
+            ])
+            ->select('id','name','slug','latitude','longitude')
             ->whereHas('reactors')
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
