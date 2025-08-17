@@ -32,7 +32,7 @@ class ImportRteData extends Command
     {
         $start = $this->option('start')
             ? Carbon::parse($this->option('start'))->startOfDay()
-            : now()->subDays(6)->startOfDay();
+            : now()->startOfDay();
         $end = $this->option('end')
             ? Carbon::parse($this->option('end'))->endOfDay()
             : now();
