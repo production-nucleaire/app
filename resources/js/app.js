@@ -5,12 +5,13 @@ import 'leaflet/dist/leaflet.css';
 
 import rivers from './rivers';
 
-// On page load or when changing themes, best to add inline in `head` to avoid FOU
-document.documentElement.classList.toggle(
-    "dark",
-    localStorage.theme === "dark" ||
-    (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches),
-);
+document.addEventListener('livewire:navigated', () => {
+    document.documentElement.classList.toggle(
+        "dark",
+        localStorage.theme === "dark" ||
+        (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches),
+    );
+});
 
 window.addEventListener('reactor-selected', event => {
     const { slug, reactor } = event.detail[0] ?? {};
