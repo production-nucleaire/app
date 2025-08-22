@@ -1,5 +1,5 @@
 <div class="relative w-[calc(100dvw-1rem)] h-[calc(100dvh-5.5rem)] md:h-[calc(100dvh-1rem)] flex flex-col md:flex-row gap-2">
-    <div @class(['w-full md:max-w-96 h-1/2 md:h-full flex flex-col gap-4 bg-white dark:bg-slate-800 rounded-md overflow-auto p-4', 'h-1/2' => !$selectedPlant, 'h-3/5' => $selectedPlant])>
+    <div @class(['w-full md:max-w-96 md:h-full flex flex-col gap-4 bg-white dark:bg-slate-800 rounded-md overflow-auto p-4', 'h-42 shrink-0' => !$selectedPlant, 'h-3/5' => $selectedPlant])>
         @if ($selectedPlant)
             <x-plant-selector :selectedPlant="$selectedPlant" :plants="$this->plants" />
             <x-plant-preview :plant="$selectedPlant" />
@@ -9,7 +9,7 @@
             <x-plant-list :plants="$this->plants" />
         @endif
     </div>
-    <div @class(['w-full h-1/2 md:h-full flex flex-col gap-2', 'h-1/2' => !$selectedPlant, 'h-2/5' => $selectedPlant])>
+    <div @class(['w-full md:h-full flex flex-col gap-2', 'h-full' => !$selectedPlant, 'h-2/5' => $selectedPlant])>
         <div wire:ignore id="map" class="w-full h-full flex flex-col items-center justify-center bg-white dark:bg-slate-800 rounded-md">
             <img class="w-16 h-16 animate-pulse" src="{{ Vite::asset('resources/images/logo.svg') }}" alt="" />
             <div class="flex flex-col items-center justify-center mt-4">
@@ -19,7 +19,7 @@
                 <span class="text-xs font-medium text-rose-500">JavaScript est désactivé</span>
             </noscript>
         </div>
-        <div class="h-8 flex items-center justify-between bg-white dark:bg-slate-800 rounded-md text-[.65rem] font-medium text-slate-600 dark:text-slate-200 px-4">
+        <div class="min-h-8 flex flex-col md:flex-row items-center justify-center md:justify-between shrink-0 bg-white dark:bg-slate-800 rounded-md text-[.65rem] font-medium text-slate-600 dark:text-slate-200 px-4 py-2">
             <span @class([
                 'flex items-center gap-1.5 [&_svg]:w-3 [&_svg]:h-3',
                 'text-rose-900 dark:text-rose-400 [&_svg]:fill-rose-700 [&_svg]:dark:fill-rose-500' => now()->subHours(6) >= $lastUpdated,
@@ -27,13 +27,13 @@
                 'text-green-900 dark:text-green-400 [&_svg]:fill-green-700 [&_svg]:dark:fill-green-500' => now()->subHours(2) < $lastUpdated,
             ])>
                 @if (now()->subHour() <= $lastUpdated)
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="fill-green-500"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM417.1 256.4L404.4 276.8L324.4 404.8L317.4 416.1L292.1 416.1L284.9 406.5C247.3 356.4 226.5 328.6 222.5 323.3L260.9 294.5C268.4 304.5 282.2 322.9 302.3 349.7C351.4 271.2 376.1 231.6 376.5 231L417.2 256.4z"/></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640" class="shrink-0 fill-green-500"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM417.1 256.4L404.4 276.8L324.4 404.8L317.4 416.1L292.1 416.1L284.9 406.5C247.3 356.4 226.5 328.6 222.5 323.3L260.9 294.5C268.4 304.5 282.2 322.9 302.3 349.7C351.4 271.2 376.1 231.6 376.5 231L417.2 256.4z"/></svg>
                 @else
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640"><!--!Font Awesome Pro v7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2025 Fonticons, Inc.--><path d="M320 576C461.4 576 576 461.4 576 320C576 178.6 461.4 64 320 64C178.6 64 64 178.6 64 320C64 461.4 178.6 576 320 576zM344 208L344 352L296 352L296 208L344 208zM296 440L296 392L344 392L344 440L296 440z"/></svg>
                 @endif
-                <span>Dernière mise à jour le <strong>{{ $lastUpdated->format('d/m/Y') }}</strong> à <strong>{{ $lastUpdated->format('H:i') }}</strong>. <a class="text-slate-800 hover:underline" href="{{ route('welcome') }}" wire:navigate>En savoir +</a></span>
+                <span>Dernière mise à jour le <strong>{{ $lastUpdated->format('d/m/Y') }}</strong> à <strong>{{ $lastUpdated->format('H:i') }}</strong>. <a class="text-slate-800 dark:text-slate-50 hover:underline" href="{{ route('welcome') }}" wire:navigate>En savoir +</a></span>
             </span>
-            <span>Données <a class="text-blue-500 hover:underline" href="https://data.rte-france.com/catalog/-/api/generation/Actual-Generation/v1.1" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
+            <span>Données&nbsp;<a class="text-blue-500 hover:underline" href="https://data.rte-france.com/catalog/-/api/generation/Actual-Generation/v1.1" target="_blank" rel="noopener noreferrer">RTE</a>.</span>
         </div>
     </div>
 </div>
