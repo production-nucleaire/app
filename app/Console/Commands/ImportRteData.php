@@ -16,7 +16,7 @@ class ImportRteData extends Command
      *
      * @var string
      */
-    protected $signature = 'app:import-rte-data {--start= : Start date in YYYY-MM-DD format} {--end= : End date in YYYY-MM-DD format} {--unofficial : Use unofficial RTE API}';
+    protected $signature = 'app:import-rte-data {--id=} {--eic=} {--start= : Start date in YYYY-MM-DD format} {--end= : End date in YYYY-MM-DD format} {--unofficial : Use unofficial RTE API}';
 
     /**
      * The console command description.
@@ -45,7 +45,13 @@ class ImportRteData extends Command
 
             $this->info('/!\ ---- Using unofficial RTE API ---- /!\\');
 
-            $reactors = Reactor::all();
+            if ($this->option('id')) {
+                $reactors = Reactor::where('id', $this->option('id'))->get();
+            } elseif ($this->option('eic')) {
+                $reactors = Reactor::where('eic_code', $this->option('eic'))->get();
+            } else {
+                $reactors = Reactor::all();
+            }
 
             if ($reactors->isEmpty()) {
                 $this->error('No reactors found in the database.');
