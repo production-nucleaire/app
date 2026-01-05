@@ -17,15 +17,23 @@ class PlantProductionChart extends Component
 
     public int $maxProduction = 0;
 
+    public int $width;
+    public int $height;
+    public int $padding;
+
     public ?Carbon $previousDay = null;
     public ?Carbon $nextDay = null;
 
     /**
      * Create a new component instance.
      */
-    public function __construct(int|Plant $plant)
+    public function __construct(int|Plant $plant, int $width = 180, int $height = 60, int $padding = 10)
     {
         $this->plant = $plant;
+
+        $this->width = $width;
+        $this->height = $height;
+        $this->padding = $padding;
 
         $this->maxProduction = $this->plant->reactors->sum('net_power_mw') ?? 0;
 
@@ -51,9 +59,9 @@ class PlantProductionChart extends Component
 
     public function generateChart(): string
     {
-        $width = 180;
-        $height = 60;
-        $padding = 10;
+        $width = $this->width;
+        $height = $this->height;
+        $padding = $this->padding;
 
         $paths = '';
 
@@ -111,7 +119,8 @@ class PlantProductionChart extends Component
      */
     public function render(): View|Closure|string
     {
-        $chart = cache('plant_production_chart_' . $this->plant->id, function () {
+        $key = 'plant_production_chart_' . $this->plant->id . '_' . $this->width . 'x' . $this->height . '_p' . $this->padding;
+        $chart = cache($key, function () {
             return $this->generateChart();
         });
 
