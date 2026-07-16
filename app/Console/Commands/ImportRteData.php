@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Record;
 use App\Models\Reactor;
-use Carbon\CarbonPeriod;
-use Illuminate\Support\Carbon;
+use App\Models\Record;
 use App\Services\RteApiService;
+use Carbon\CarbonPeriod;
 use Illuminate\Console\Command;
+use Illuminate\Support\Carbon;
 
 class ImportRteData extends Command
 {
@@ -23,7 +23,7 @@ class ImportRteData extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Import nuclear reactor production data from the RTE API (official or --unofficial)';
 
     /**
      * Execute the console command.
@@ -39,7 +39,7 @@ class ImportRteData extends Command
 
         $this->info('Fetching data from RTE API...');
 
-        $this->info('Start: ' . $start->format(DATE_ATOM) . ', End: ' . $end->format(DATE_ATOM));
+        $this->info('Start: '.$start->format(DATE_ATOM).', End: '.$end->format(DATE_ATOM));
 
         if ($this->option('unofficial')) {
 
@@ -55,36 +55,43 @@ class ImportRteData extends Command
 
             if ($reactors->isEmpty()) {
                 $this->error('No reactors found in the database.');
+
                 return;
             }
 
             foreach ($reactors as $reactor) {
-                $this->info(' + Processing reactor: ' . $reactor->name);
+                $this->info(' + Processing reactor: '.$reactor->name);
 
                 $period = CarbonPeriod::create($start, $end);
                 foreach ($period as $date) {
-                    $this->info(' +--- Fetching data for date: ' . $date->format('Y-m-d'));
+                    $this->info(' +--- Fetching data for date: '.$date->format('Y-m-d'));
 
                     try {
                         $data = app(RteApiService::class)->fetchGenerationForUnit($reactor->eic_code, $date);
                     } catch (\Exception $e) {
-                        $this->error('Error fetching data for date: ' . $date->format('Y-m-d'));
+                        $this->error('Error fetching data for date: '.$date->format('Y-m-d'));
                         $this->info($e->getMessage());
+
                         continue;
                     }
 
                     if (empty($data)) {
-                        $this->error(' +--- No data found for date: ' . $date->format('Y-m-d'));
+                        $this->error(' +--- No data found for date: '.$date->format('Y-m-d'));
+
                         continue;
                     }
 
-                    foreach( $data as $entry ) {
-                        Record::updateOrCreate([
+                    $rows = [];
+                    foreach ($data as $entry) {
+                        $rows[] = [
                             'reactor_id' => $reactor->id,
-                            'date' => $entry['date'],
-                        ], [
+                            'date' => Carbon::parse($entry['date'])->format('Y-m-d H:i:s'),
                             'value' => (int) $entry['group'],
-                        ]);
+                        ];
+                    }
+
+                    if ($rows) {
+                        Record::upsert($rows, ['reactor_id', 'date'], ['value']);
                     }
                 }
 
@@ -100,37 +107,44 @@ class ImportRteData extends Command
             } catch (\Exception $e) {
                 $this->error('Error fetching data from RTE API');
                 $this->info($e->getMessage());
+
                 return;
             }
 
             if (empty($data)) {
                 $this->info('No data found for the specified period.');
+
                 return;
             }
 
             foreach ($data as $entry) {
 
-                if ('NUCLEAR' !== $entry['unit']['production_type']) {
-                    $this->info('Skipping non-nuclear unit: ' . $entry['unit']['eic_code']);
+                if ($entry['unit']['production_type'] !== 'NUCLEAR') {
+                    $this->info('Skipping non-nuclear unit: '.$entry['unit']['eic_code']);
+
                     continue;
                 }
 
                 $reactor = Reactor::where('eic_code', $entry['unit']['eic_code'])->first();
-                if (!$reactor) {
-                    $this->error('Reactor not found for EIC code: ' . $entry['unit']['eic_code']);
+                if (! $reactor) {
+                    $this->error('Reactor not found for EIC code: '.$entry['unit']['eic_code']);
+
                     continue;
                 }
 
+                $this->info('Processing '.count($entry['values']).' records for reactor: '.$reactor->name);
+
+                $rows = [];
                 foreach ($entry['values'] as $value) {
-
-                    $this->info('Processing data for reactor: ' . $reactor->name . ' on ' . $value['end_date']);
-
-                    Record::updateOrCreate([
+                    $rows[] = [
                         'reactor_id' => $reactor->id,
-                        'date' => Carbon::parse($value['end_date']),
-                    ], [
+                        'date' => Carbon::parse($value['end_date'])->format('Y-m-d H:i:s'),
                         'value' => (int) $value['value'],
-                    ]);
+                    ];
+                }
+
+                if ($rows) {
+                    Record::upsert($rows, ['reactor_id', 'date'], ['value']);
                 }
             }
 

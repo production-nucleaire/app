@@ -7,7 +7,6 @@
         init() {
             this.plants = this.$el.querySelectorAll('ul li button');
             this.selected = this.$el.querySelector('button.active').getAttribute('data-selector-id');
-            console.log(this.selected);
         },
         selectNext() {
             let currentIndex = Array.from(this.plants).findIndex(plant => plant.getAttribute('data-selector-id') == this.selected);

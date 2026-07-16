@@ -2,42 +2,60 @@
 
 namespace App\View\Components;
 
-use Closure;
 use App\Models\Plant;
-use Illuminate\Support\Carbon;
-use Illuminate\View\Component;
-use Illuminate\Support\Collection;
+use Closure;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\View\Component;
 
 class PlantProductionChart extends Component
 {
     public Plant $plant;
+
+    public bool $static = true;
 
     public array $records = [];
 
     public int $maxProduction = 0;
 
     public int $width;
+
     public int $height;
+
     public int $padding;
 
     public ?Carbon $previousDay = null;
+
     public ?Carbon $nextDay = null;
 
     /**
      * Create a new component instance.
      */
-    public function __construct(int|Plant $plant, int $width = 180, int $height = 60, int $padding = 10)
-    {
+    public function __construct(
+        int|Plant $plant,
+        bool $static = true,
+        int $width = 180,
+        int $height = 60,
+        int $padding = 10
+    ) {
         $this->plant = $plant;
+
+        $this->static = $static;
 
         $this->width = $width;
         $this->height = $height;
         $this->padding = $padding;
+    }
 
-        $this->maxProduction = $this->plant->reactors->sum('net_power_mw') ?? 0;
-
-        $this->records = $this->plant->records()
+    /**
+     * Load and aggregate the plant's records for the last 24 hours.
+     *
+     * Kept out of the constructor so it only runs on a cache miss (see render()).
+     */
+    protected function loadRecords(): array
+    {
+        return $this->plant->records()
             ->whereBetween('date', [
                 now()->copy()->subHours(24),
                 now(),
@@ -47,9 +65,10 @@ class PlantProductionChart extends Component
             ->groupBy(fn ($record) => $record->date->format('Y-m-d H:i'))
             ->map(function (Collection $group) {
                 $first = $group->first();
+
                 return [
-                    'date'  => $first->date->format('d/m/Y H:i:s'),
-                    'time'  => $first->date->format('H:i'),
+                    'date' => $first->date->format('d/m/Y H:i:s'),
+                    'time' => $first->date->format('H:i'),
                     'value' => $group->sum('value'),
                 ];
             })
@@ -62,6 +81,9 @@ class PlantProductionChart extends Component
         $width = $this->width;
         $height = $this->height;
         $padding = $this->padding;
+
+        $this->records = $this->loadRecords();
+        $this->maxProduction = (int) ($this->plant->reactors->sum('net_power_mw') ?? 0);
 
         $paths = '';
 
@@ -78,8 +100,8 @@ class PlantProductionChart extends Component
             }
 
             // Build smooth path using cubic Bézier curves
-            $linePath = 'M ' . implode(',', $points[0]);
-            $areaPath = 'M ' . implode(',', $points[0]);
+            $linePath = 'M '.implode(',', $points[0]);
+            $areaPath = 'M '.implode(',', $points[0]);
 
             for ($i = 1; $i < count($points); $i++) {
                 $p0 = $points[$i - 1];
@@ -87,8 +109,8 @@ class PlantProductionChart extends Component
                 $cx = ($p0[0] + $p1[0]) / 2;
                 $cy = ($p0[1] + $p1[1]) / 2;
 
-                $linePath .= ' Q ' . implode(',', $p0) . ' ' . implode(',', [$cx, $cy]);
-                $areaPath .= ' Q ' . implode(',', $p0) . ' ' . implode(',', [$cx, $cy]);
+                $linePath .= ' Q '.implode(',', $p0).' '.implode(',', [$cx, $cy]);
+                $areaPath .= ' Q '.implode(',', $p0).' '.implode(',', [$cx, $cy]);
             }
 
             // Close the area path (down to x of last point, then bottom, then back to x of first)
@@ -98,8 +120,8 @@ class PlantProductionChart extends Component
 
             $areaPath .= " L {$lastX},{$bottomY} L {$firstX},{$bottomY} Z";
 
-            $paths .= '<path d="' . $areaPath . '" class="fill-green-400" stroke="none" />';
-            $paths .= '<path d="' . $linePath . '" class="fill-transparent stroke-green-700 stroke-2" />';
+            $paths .= '<path d="'.$areaPath.'" class="fill-green-400" stroke="none" />';
+            $paths .= '<path d="'.$linePath.'" class="fill-transparent stroke-green-700 stroke-2" />';
 
         }
 
@@ -109,8 +131,6 @@ class PlantProductionChart extends Component
             </svg>
         SVG;
 
-        cache(['plant_production_chart_' . $this->plant->id => $svg], now()->addMinutes(10));
-
         return $svg;
     }
 
@@ -119,8 +139,8 @@ class PlantProductionChart extends Component
      */
     public function render(): View|Closure|string
     {
-        $key = 'plant_production_chart_' . $this->plant->id . '_' . $this->width . 'x' . $this->height . '_p' . $this->padding;
-        $chart = cache($key, function () {
+        $key = 'plant_production_chart_'.$this->plant->id.'_'.$this->width.'x'.$this->height.'_p'.$this->padding;
+        $chart = cache()->remember($key, now()->addMinutes(10), function () {
             return $this->generateChart();
         });
 

@@ -19,8 +19,6 @@
                 href="{{ route('plant', ['slug' => $plant->slug]) }}"
                 wire:key="plant-{{ $plant->id }}"
                 wire:click.prevent="$set('selectedPlantId', {{ $plant->id }})"
-                x-on:mouseover="highlightPlantMarker({{ $plant->id }})"
-                x-on:mouseout="unhighlightPlantMarker({{ $plant->id }})"
                 x-bind:class="mode == 'grid' ? 'flex-col gap-2' : 'flex-row'"
             >
                 <div>

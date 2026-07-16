@@ -16,7 +16,10 @@
     },
     "dependencies": {
         "@fontsource/open-sans": "^5.2.6",
+        "apexcharts": "^5.3.6",
         "leaflet": "^1.9.4",
-        "microtip": "^0.2.2"
+        "lightweight-charts": "^5.0.8",
+        "microtip": "^0.2.2",
+        "puppeteer": "^24.17.0"
     }
 }

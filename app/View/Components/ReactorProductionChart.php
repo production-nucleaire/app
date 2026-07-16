@@ -2,19 +2,19 @@
 
 namespace App\View\Components;
 
-use Closure;
 use App\Models\Reactor;
-use Maantje\Charts\Chart;
-use Maantje\Charts\XAxis;
-use Maantje\Charts\YAxis;
-use Maantje\Charts\Line\Line;
+use Closure;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Number;
 use Illuminate\View\Component;
+use Maantje\Charts\Annotations\XAxis\XAxisLineAnnotation;
+use Maantje\Charts\Chart;
+use Maantje\Charts\Line\Line;
 use Maantje\Charts\Line\Lines;
 use Maantje\Charts\Line\Point;
-use Illuminate\Contracts\View\View;
-use Maantje\Charts\Annotations\XAxis\XAxisLineAnnotation;
+use Maantje\Charts\XAxis;
+use Maantje\Charts\YAxis;
 
 class ReactorProductionChart extends Component
 {
@@ -25,6 +25,7 @@ class ReactorProductionChart extends Component
     public Carbon $day;
 
     public ?Carbon $previousDay = null;
+
     public ?Carbon $nextDay = null;
 
     /**
@@ -38,12 +39,15 @@ class ReactorProductionChart extends Component
 
         $this->reactor = $reactor;
 
-        $this->records = $reactor->records
+        // Query builder (not the ->records collection) so we only load the single
+        // day being displayed instead of every record the reactor has ever had.
+        $this->records = $reactor->records()
             ->whereBetween('date', [
                 $this->day->copy()->startOfDay(),
-                $this->day->copy()->endOfDay()
+                $this->day->copy()->endOfDay(),
             ])
-            ->sortBy('date')
+            ->orderBy('date')
+            ->get()
             ->map(function ($record) {
                 return [
                     'date' => $record->date->format('Y-m-d H:i:s'),
@@ -53,20 +57,20 @@ class ReactorProductionChart extends Component
                 ];
             })->toArray();
 
-            // Double the first hour to ensure the chart start with a full hour
-            // This is to avoid the chart starting at 00:00 with no data visible.
-            if (1 === count($this->records)) {
-                $datetime = Carbon::parse(end($this->records)['date']);
-                if (0 === $datetime->hour) {
-                    $this->records = [
-                        end($this->records),
-                        [
-                            ...end($this->records),
-                            'date' => $datetime->addHour()->format('Y-m-d H:i:s'),
-                        ],
-                    ];
-                }
+        // Double the first hour to ensure the chart start with a full hour
+        // This is to avoid the chart starting at 00:00 with no data visible.
+        if (count($this->records) === 1) {
+            $datetime = Carbon::parse(end($this->records)['date']);
+            if ($datetime->hour === 0) {
+                $this->records = [
+                    end($this->records),
+                    [
+                        ...end($this->records),
+                        'date' => $datetime->addHour()->format('Y-m-d H:i:s'),
+                    ],
+                ];
             }
+        }
     }
 
     public function chart(): string
@@ -79,7 +83,7 @@ class ReactorProductionChart extends Component
         }
 
         // Fill missing hours (interpolate or set to 0)
-        $data = array_map(fn($v) => $v ?? 0, $data);
+        $data = array_map(fn ($v) => $v ?? 0, $data);
 
         $steps = [];
         $last = 0;
@@ -125,7 +129,7 @@ class ReactorProductionChart extends Component
                             id: 'line-a',
                             class: 'line-a',
                             points: array_map(
-                                fn($i, $v) => new Point(x: $i, y: max($v ?? 0, 0)),
+                                fn ($i, $v) => new Point(x: $i, y: max($v ?? 0, 0)),
                                 array_keys($data),
                                 $data
                             ),
@@ -141,8 +145,6 @@ class ReactorProductionChart extends Component
 
         $svg = $chart->render();
 
-        cache(['reactor_production_chart_' . $this->reactor->id => $svg], now()->addMinutes(10));
-
         return $svg;
     }
 
@@ -151,7 +153,10 @@ class ReactorProductionChart extends Component
      */
     public function render(): View|Closure|string
     {
-        $chart = cache('reactor_production_chart_' . $this->reactor->id, function () {
+        // Key by day: each day renders a distinct chart, so the previous cache
+        // (keyed only by reactor id) returned a stale SVG when navigating days.
+        $key = 'reactor_production_chart_'.$this->reactor->id.'_'.$this->day->format('Y-m-d');
+        $chart = cache()->remember($key, now()->addMinutes(10), function () {
             return $this->chart();
         });
 

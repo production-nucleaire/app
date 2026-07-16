@@ -4,6 +4,7 @@
             <x-plant-selector :selectedPlant="$selectedPlant" :plants="$this->plants" />
             <x-plant-preview :plant="$selectedPlant" />
             <x-plant-reactors :selectedPlant="$selectedPlant" :selectedReactor="$selectedReactor" :day="$day" />
+            <x-plant-production-chart :static="false" :plant="$selectedPlant" :day="$day" />
             <x-plant-navigation :previousPlant="$previousPlant" :nextPlant="$nextPlant" />
         @else
             <x-plant-list :plants="$this->plants" />
@@ -41,12 +42,48 @@
 @script
     <script>
         const plants = @json($this->markers),
-        selectedPlantId = @js($this->selectedPlantId);
+        selectedPlantId = @js($this->selectedPlantId),
+        selectedReactorId = @js($this->selectedReactorId),
+        plantRecords = @js($this->plantRecords());
+
+        $js('selectSeries', (name) => {
+            if (window.apexPlantChart) {
+                window.apexPlantChart.w.config.series?.forEach((series, index) => {
+                    if (series.name === name) {
+                        window.apexPlantChart.showSeries(series.name);
+                    } else {
+                        window.apexPlantChart.hideSeries(series.name);
+                    }
+                });
+            }
+        });
+
+        if (selectedPlantId) {
+            const chart = $wire.el.querySelector(`#plant-${selectedPlantId}-production-chart`);
+            if (chart) {
+                createApexPlantChart(chart, plantRecords);
+            }
+        }
 
         createPlantMap(plants);
 
         if (selectedPlantId) {
             selectPlantMarker(selectedPlantId);
         }
+
+        $wire.on('plant-selected', (event) => {
+            const { plantId, slug, records } = event[0] ?? {};
+            history.pushState(null, '', `/` + (slug ?? ''));
+            if (plantId) {
+                selectPlantMarker(plantId);
+                if (window.apexPlantChart) {
+                    window.apexPlantChart.destroy();
+                }
+                const chart = document.querySelector(`#plant-production-chart`);
+                if (chart) {
+                    createApexPlantChart(chart, records);
+                }
+            }
+        });
     </script>
 @endscript

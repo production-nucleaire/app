@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\SvgService;
+use Illuminate\Console\Command;
 
 class GenerateAllMarkers extends Command
 {
@@ -13,9 +13,9 @@ class GenerateAllMarkers extends Command
 
     public function handle(SvgService $svg)
     {
-        $max = (int) $this->option('max');
+        $max = max(2, (int) $this->option('max'));
 
-        foreach (range(2, 6) as $total) {
+        foreach (range(2, $max) as $total) {
             foreach (range(1, $total - 1) as $active) {
                 $path = $svg->storeMarker($active, $total);
                 $this->line("Generated: marker-{$active}-{$total}.svg → $path");
