@@ -6,19 +6,92 @@
 @source '../**/*.blade.php';
 @source '../**/*.js';
 
-@import "@fontsource/open-sans/400.css";
-@import "@fontsource/open-sans/500.css";
-@import "@fontsource/open-sans/600.css";
-@import "@fontsource/open-sans/700.css";
+/* Family 2 typefaces — self-hosted to match the existing @fontsource approach */
+@import "@fontsource/instrument-sans/400.css";
+@import "@fontsource/instrument-sans/500.css";
+@import "@fontsource/instrument-sans/600.css";
+@import "@fontsource/instrument-sans/700.css";
+@import "@fontsource/spline-sans-mono/400.css";
+@import "@fontsource/spline-sans-mono/500.css";
+@import "@fontsource/spline-sans-mono/600.css";
 
 @import 'microtip/microtip';
 
 @theme {
-    --font-sans: 'Open Sans', sans-serif;
+    --font-sans: 'Instrument Sans', sans-serif;
+    --font-mono: 'Spline Sans Mono', monospace;
+
+    /* Family 2 — light palette (semantic tokens; overridden under .dark below) */
+    --color-body: #ececea;
+    --color-panel: #f7f8f8;
+    --color-surface: #ffffff;
+    --color-line: #e4e7e7;
+    --color-line-strong: #dde0e0;
+    --color-track: #edf0f0;
+    --color-ink: #14232b;
+    --color-muted: #68757b;
+    --color-faint: #8a969b;
+    --color-brand: #124a63;
+    --color-brand-soft: #e8f0f4;
+    --color-accent: #0d8a4f;
+    --color-accent-mid: #5fb98a;
+    --color-accent-light: #7fd4a8;
+    --color-idle: #c3ccc7;
+    --color-danger: #b5471d;
+}
+
+/* Family 2 — dark palette: flip the same semantic tokens so every
+   bg-surface / text-ink / border-line utility follows the theme. */
+.dark {
+    --color-body: #0a1216;
+    --color-panel: #0e1a20;
+    --color-surface: #14232b;
+    --color-line: #223640;
+    --color-line-strong: #2b414c;
+    --color-track: #1b2c34;
+    --color-ink: #eef3f4;
+    --color-muted: #9fb0b7;
+    --color-faint: #7d8f97;
+    --color-brand: #2f89b0;
+    --color-brand-soft: #16323f;
+    --color-accent: #16a862;
+    --color-accent-mid: #5fb98a;
+    --color-accent-light: #7fd4a8;
+    --color-idle: #4a5a60;
+    --color-danger: #d1602f;
+}
+
+@keyframes pulse-dot {
+    0% { opacity: 1; }
+    50% { opacity: 0.35; }
+    100% { opacity: 1; }
+}
+
+.animate-pulse-dot {
+    animation: pulse-dot 2s infinite;
 }
 
 button {
     @apply cursor-pointer transition-colors duration-200 ease-in-out;
+}
+
+[x-cloak] {
+    display: none !important;
+}
+
+/* Leaflet — cool desaturated tiles (Family 2 map look) */
+.leaflet-container {
+    font-family: var(--font-sans);
+    background: var(--color-panel);
+}
+
+.leaflet-tile-pane {
+    filter: grayscale(0.5) brightness(1.04);
+}
+
+.leaflet-div-icon {
+    background: none;
+    border: none;
 }
 
 .reactor-production-chart .reactor-production-chart-grid-line {
@@ -29,28 +102,22 @@ button {
     @apply opacity-0;
 }
 
-.dark .reactor-production-chart > rect:first-child {
-    @apply fill-slate-700;
-}
-
-.dark .leaflet-tile-container {
-    background: #111;
-    filter: grayscale(100%) brightness(0.6) contrast(1.2);
-    position: relative;
+.dark .leaflet-tile-pane {
+    filter: grayscale(1) brightness(0.55) contrast(1.15);
 }
 
 .dark .leaflet-container::after {
-    background: rgb(66, 90, 130);
+    background: rgb(30, 60, 78);
     content: '';
     inset: 0;
     mix-blend-mode: color;
-    opacity: 0.5;
+    opacity: 0.45;
     pointer-events: none;
     position: absolute;
     z-index: 1000;
 }
 
 .dark .leaflet-control-attribution {
-    background: var(--color-slate-800) !important;
-    color: var(--color-slate-200) !important;
+    background: var(--color-surface) !important;
+    color: var(--color-muted) !important;
 }

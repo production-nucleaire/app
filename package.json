@@ -15,8 +15,8 @@
         "vite": "^7.0.4"
     },
     "dependencies": {
-        "@fontsource/open-sans": "^5.2.6",
-        "apexcharts": "^5.3.6",
+        "@fontsource/instrument-sans": "^5.2.8",
+        "@fontsource/spline-sans-mono": "^5.2.8",
         "leaflet": "^1.9.4",
         "lightweight-charts": "^5.0.8",
         "microtip": "^0.2.2",
