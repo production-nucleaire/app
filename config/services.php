@@ -35,6 +35,14 @@ return [
         ],
     ],
 
+    // Bluesky (AT Protocol) posting for the live-production share bot. Use an
+    // app-password (Settings → App Passwords), never the account password.
+    'bluesky' => [
+        'identifier' => env('BLUESKY_IDENTIFIER'),
+        'password' => env('BLUESKY_PASSWORD'),
+        'base_url' => env('BLUESKY_BASE_URL', 'https://bsky.social'),
+    ],
+
     'rte' => [
         'cache_token' => env('RTE_CACHE_TOKEN', false),
         'client_id' => env('RTE_CLIENT_ID'),
