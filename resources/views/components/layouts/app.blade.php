@@ -6,6 +6,24 @@
 
         <title>L’Atome Français - Suivi de la production électro-nucléaire française heure par heure</title>
 
+        {{-- Open Graph / Twitter share card (image rendered by ShareImageService) --}}
+        @php
+            $og = \App\Support\OgImage::forCurrentRoute();
+        @endphp
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="électronucléaire.fr">
+        <meta property="og:locale" content="fr_FR">
+        <meta property="og:url" content="{{ $og['url'] }}">
+        <meta property="og:title" content="{{ $og['title'] }}">
+        <meta property="og:description" content="{{ $og['description'] }}">
+        <meta property="og:image" content="{{ $og['image'] }}">
+        <meta property="og:image:width" content="1200">
+        <meta property="og:image:height" content="630">
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:title" content="{{ $og['title'] }}">
+        <meta name="twitter:description" content="{{ $og['description'] }}">
+        <meta name="twitter:image" content="{{ $og['image'] }}">
+
         <script>
             (() => {
                 const dark = localStorage.theme === 'dark'
@@ -25,6 +43,7 @@
             $active = match (true) {
                 request()->routeIs('history') => 'history',
                 request()->routeIs('plant'), request()->routeIs('reactor') => 'plant',
+                request()->routeIs('table') => 'national',
                 default => 'national',
             };
         @endphp

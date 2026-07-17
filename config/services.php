@@ -42,4 +42,14 @@ return [
         'base_url' => env('RTE_API_BASE_URL', 'https://digital.iservices.rte-france.com'),
     ],
 
+    // Headless-Chrome rendering (Spatie Browsershot) used to rasterise the
+    // Open Graph share images. The scheduled prod import runs with a minimal
+    // PATH, so the node/Chrome binaries usually have to be set explicitly.
+    'browsershot' => [
+        'node_binary' => env('BROWSERSHOT_NODE_BINARY'),
+        'npm_binary' => env('BROWSERSHOT_NPM_BINARY'),
+        'chrome_path' => env('BROWSERSHOT_CHROME_PATH'),
+        'node_module_path' => env('BROWSERSHOT_NODE_MODULE_PATH', base_path('node_modules')),
+    ],
+
 ];

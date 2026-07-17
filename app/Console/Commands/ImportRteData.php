@@ -5,9 +5,11 @@ namespace App\Console\Commands;
 use App\Models\Reactor;
 use App\Models\Record;
 use App\Services\RteApiService;
+use App\Services\ShareImageService;
 use Carbon\CarbonPeriod;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ImportRteData extends Command
 {
@@ -152,5 +154,16 @@ class ImportRteData extends Command
         }
 
         cache()->forever('rte:last_successful_import', now()->format('Y-m-d H:i:s'));
+
+        // Refresh the national + default share cards with the fresh data. Runs
+        // in CLI so a synchronous Browsershot render is fine; never let a render
+        // failure fail the ingestion itself.
+        try {
+            cache()->forget('national:stats');
+            ShareImageService::national();
+            ShareImageService::default();
+        } catch (\Throwable $e) {
+            Log::warning('Share-image render failed after import: '.$e->getMessage());
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Plant;
 use App\Models\Record;
+use App\Services\NationalMonthly;
 use App\Services\NationalSeries;
 use App\Support\LoadColor;
 use App\Support\Sparkline;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class History extends Component
 {
@@ -23,6 +25,41 @@ class History extends Component
 
     #[Url(as: 'au')]
     public ?string $to = null;
+
+    #[Url(as: 'vue')]
+    public string $view = 'graphe'; // graphe | tableau
+
+    #[Url(as: 'grain')]
+    public string $grain = 'mois'; // jour | semaine | mois | annee
+
+    public function setView(string $view): void
+    {
+        $this->view = $view === 'tableau' ? 'tableau' : 'graphe';
+    }
+
+    public function setGrain(string $grain): void
+    {
+        $this->grain = in_array($grain, ['jour', 'semaine', 'mois', 'annee'], true) ? $grain : 'mois';
+    }
+
+    /** Granularity options for the table sub-toolbar (key => label). */
+    public function grains(): array
+    {
+        return ['jour' => 'Jour', 'semaine' => 'Semaine', 'mois' => 'Mois', 'annee' => 'Année'];
+    }
+
+    /** Full data span, shown next to the granularity selector, e.g. "déc. 2024 → juil. 2026". */
+    public function periodLabel(): string
+    {
+        $min = Record::min('date');
+        $max = Record::max('date');
+
+        if (! $min || ! $max) {
+            return '';
+        }
+
+        return Carbon::parse($min)->translatedFormat('M Y').' → '.Carbon::parse($max)->translatedFormat('M Y');
+    }
 
     /**
      * Bucket granularity (substr length on the stored date) per range.
@@ -74,7 +111,8 @@ class History extends Component
     public function updated($property): void
     {
         // wire:ignore keeps the chart div, so push fresh points to the client JS.
-        if (in_array($property, ['range', 'from', 'to'], true)) {
+        // 'view' is included so returning to the graph re-mounts the chart at the correct size.
+        if (in_array($property, ['range', 'from', 'to', 'view'], true)) {
             $this->pushChart();
         }
     }
@@ -151,6 +189,69 @@ class History extends Component
         $min = Record::min('date');
 
         return $min ? Carbon::parse($min)->timestamp : null;
+    }
+
+    /**
+     * The full data span — the table always shows everything and is sliced by granularity,
+     * so the range presets / du-au picker (which drive the chart) don't apply here.
+     *
+     * @return array{start:Carbon,end:Carbon}
+     */
+    protected function tableWindow(): array
+    {
+        $min = Record::min('date');
+
+        return [
+            'start' => $min ? Carbon::parse($min) : now()->subYear(),
+            'end' => now(),
+        ];
+    }
+
+    /**
+     * Production synthesis grouped by year at the selected granularity (the "Tableau" view).
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    #[Computed]
+    public function monthlyTable(): array
+    {
+        ['start' => $start, 'end' => $end] = $this->tableWindow();
+
+        return NationalMonthly::table($start, $end, $this->grain);
+    }
+
+    /** Stream the current-granularity synthesis as a CSV (year totals + sub-rows, newest first). */
+    public function exportCsv(): StreamedResponse
+    {
+        $filename = 'production-nucleaire-'.$this->grain.'-'.Carbon::now()->format('Y-m-d-Hi').'.csv';
+        $years = $this->monthlyTable();
+        $fr = fn (float $v, int $d = 1) => number_format($v, $d, ',', '');
+
+        $line = fn ($out, string $annee, string $periode, array $r) => fputcsv($out, [
+            $annee,
+            $periode,
+            $fr($r['avg']),
+            $fr($r['min']),
+            $fr($r['max']),
+            $r['fdc'],
+            $fr($r['twh'], 2),
+            $r['deltaPct'] !== null ? $fr($r['deltaPct']) : '',
+        ], ';', '"', '');
+
+        return response()->streamDownload(function () use ($years, $line) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\u{FEFF}"); // BOM so Excel reads UTF-8
+            fputcsv($out, ['Année', 'Période', 'Moyenne (GW)', 'Min (GW)', 'Max (GW)', 'Facteur de charge (%)', 'Énergie (TWh)', 'Évolution (%)'], ';', '"', '');
+
+            foreach ($years as $year) {
+                $line($out, $year['label'], $year['label'], $year); // year synthesis
+                foreach ($year['rows'] as $row) {
+                    $line($out, $year['label'], $row['label'], $row);
+                }
+            }
+
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
     /**

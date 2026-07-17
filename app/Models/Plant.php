@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Plant extends Model
 {
+    use HasFactory;
+
     /**
      * The attributes that are mass assignable.
      *
@@ -71,6 +74,7 @@ class Plant extends Model
     public function getPercentValueAttribute(): float
     {
         $total = $this->total_production_mw;
+
         return $total > 0 ? ($this->latest_production_mw / $total * 100) : 0;
     }
 }

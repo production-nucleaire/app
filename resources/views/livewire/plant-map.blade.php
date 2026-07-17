@@ -202,6 +202,11 @@
         <section class="flex-1 relative min-w-0 min-h-0">
             <div wire:ignore id="map" class="absolute inset-0 bg-panel"></div>
 
+            <div class="absolute left-3.5 top-3.5 z-[500] flex gap-0.5 bg-surface/95 border border-line rounded-lg p-0.5 font-sans text-[12px] backdrop-blur-sm">
+                <span class="px-3 py-1 rounded-md bg-brand text-white font-semibold">Carte</span>
+                <a href="{{ route('table') }}" wire:navigate class="px-3 py-1 rounded-md text-faint hover:text-ink transition-colors">Tableau</a>
+            </div>
+
             <div class="absolute left-3.5 bottom-3.5 z-[500] bg-surface/95 border border-line rounded-[10px] px-3.5 py-2.5 flex gap-4 font-mono text-[11.5px] text-muted backdrop-blur-sm">
                 <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-[2.5px]" style="border-color:var(--color-accent)"></span>charge (%)</span>
                 <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full border-[2.5px]" style="border-color:var(--color-idle)"></span>à l'arrêt</span>

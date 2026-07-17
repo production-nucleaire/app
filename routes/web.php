@@ -1,12 +1,13 @@
 <?php
 
+use App\Models\Plant;
 use App\Livewire\History;
 use App\Livewire\PlantMap;
-use App\Models\Plant;
-use App\Services\NationalSeries;
-use App\Services\ReactorSeries;
 use Illuminate\Http\Request;
+use App\Livewire\ReactorTable;
 use Illuminate\Support\Carbon;
+use App\Services\ReactorSeries;
+use App\Services\NationalSeries;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', PlantMap::class)
@@ -14,6 +15,9 @@ Route::get('/', PlantMap::class)
 
 Route::get('/historique', History::class)
     ->name('history');
+
+Route::get('/tableau', ReactorTable::class)
+    ->name('table');
 
 // Lazy "load older" data source for the interactive per-tranche chart.
 Route::get('/api/plants/{plant:slug}/records', function (Plant $plant, Request $request) {
