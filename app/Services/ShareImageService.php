@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Plant;
 use App\Models\Reactor;
+use App\Support\BrowsershotFactory;
 use App\Support\OgSvg;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -263,28 +264,9 @@ class ShareImageService
 
     protected static function shot(string $html): Browsershot
     {
-        $shot = Browsershot::html($html)
+        return BrowsershotFactory::html($html)
             ->windowSize(self::W, self::H)
             ->setScreenshotType('png')
             ->waitUntilNetworkIdle();
-
-        $cfg = config('services.browsershot');
-        if (! empty($cfg['node_binary'])) {
-            $shot->setNodeBinary($cfg['node_binary']);
-        }
-        if (! empty($cfg['npm_binary'])) {
-            $shot->setNpmBinary($cfg['npm_binary']);
-        }
-        if (! empty($cfg['chrome_path'])) {
-            $shot->setChromePath($cfg['chrome_path']);
-        }
-        if (! empty($cfg['node_module_path'])) {
-            $shot->setNodeModulePath($cfg['node_module_path']);
-        }
-        if (! empty($cfg['chromium_arguments'])) {
-            $shot->addChromiumArguments(explode(',', $cfg['chromium_arguments'] ?? []));
-        }
-
-        return $shot;
     }
 }

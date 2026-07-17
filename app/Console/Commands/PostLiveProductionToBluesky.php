@@ -2,9 +2,12 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Plant;
 use App\Services\BlueskyService;
 use App\Services\NationalStats;
+use App\Services\ProductionMovers;
 use App\Services\ShareImageService;
+use App\Services\SocialShotService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Number;
@@ -24,7 +27,7 @@ class PostLiveProductionToBluesky extends Command
      *
      * @var string
      */
-    protected $description = 'Post the current national nuclear production to Bluesky, with the national share card.';
+    protected $description = 'Post the current national nuclear production to Bluesky, with live screenshots of the site.';
 
     protected const SITE_TEXT = 'electronucleaire.fr';
 
@@ -33,32 +36,71 @@ class PostLiveProductionToBluesky extends Command
     /**
      * Execute the console command.
      */
-    public function handle(BlueskyService $bluesky): int
+    public function handle(BlueskyService $bluesky, SocialShotService $shots): int
     {
         $stats = NationalStats::get();
+        $movers = ProductionMovers::top(2);
 
-        $text = $this->buildText($stats);
+        $text = $this->buildText($stats, $movers);
         $facets = $this->linkFacets($text);
-        $imagePath = $this->nationalImagePath();
-        $altText = $this->buildAltText($stats);
+        $images = $this->collectImages($shots, $movers);
+
+        // Never post with zero images: fall back to the national OG card.
+        if ($images === []) {
+            $this->warn('All screenshots failed; falling back to the national share card.');
+            if ($national = $this->nationalImagePath()) {
+                $images[] = ['path' => $national, 'alt' => $this->buildAltText($stats)];
+            }
+        }
 
         try {
-            $uri = $bluesky->post($text, $imagePath, $altText, $facets);
+            $uri = $bluesky->post($text, $images, $facets);
         } catch (RuntimeException $e) {
             $this->error($e->getMessage());
 
             return self::FAILURE;
         }
 
-        $this->info('Posted to Bluesky: '.$uri);
+        $this->info('Posted to Bluesky with '.count($images).' image(s): '.$uri);
 
         return self::SUCCESS;
     }
 
     /**
-     * @param  array<string,mixed>  $stats
+     * Screenshot the homepage, the table, and each mover's plant page. Each shot
+     * is best-effort; failed ones are simply skipped. Capped at Bluesky's 4.
+     *
+     * @param  array<int,array{plant: Plant, delta: int, current: int}>  $movers
+     * @return array<int,array{path: string, alt: string}>
      */
-    protected function buildText(array $stats): string
+    protected function collectImages(SocialShotService $shots, array $movers): array
+    {
+        $images = [];
+
+        if ($home = $shots->home()) {
+            $images[] = ['path' => $home, 'alt' => 'Carte interactive de la production nucléaire française et liste des centrales.'];
+        }
+        if ($table = $shots->tableau()) {
+            $images[] = ['path' => $table, 'alt' => 'Tableau détaillé de la production par centrale et par réacteur (électronucléaire.fr).'];
+        }
+
+        foreach ($movers as $mover) {
+            if (count($images) >= 4) {
+                break;
+            }
+            if ($shot = $shots->plant($mover['plant'])) {
+                $images[] = ['path' => $shot, 'alt' => $this->moverAlt($mover)];
+            }
+        }
+
+        return $images;
+    }
+
+    /**
+     * @param  array<string,mixed>  $stats
+     * @param  array<int,array{plant: Plant, delta: int, current: int}>  $movers
+     */
+    protected function buildText(array $stats, array $movers = []): string
     {
         $gw = $this->fr($stats['injected_gw'], 1);
         $coupled = $stats['coupled'];
@@ -66,9 +108,30 @@ class PostLiveProductionToBluesky extends Command
         $load = $stats['load_factor_pct'];
         $date = now()->locale('fr')->isoFormat('D MMM YYYY').' à '.now()->format('H\hi');
 
-        return "☢️ Production nucléaire française\n\n"
-            ."{$gw} GW injectés · {$coupled}/{$total} réacteurs couplés · {$load} % de charge\n\n"
-            ."{$date} — ".self::SITE_TEXT;
+        $text = "⚛️ Production nucléaire française ⚛️\n\n"
+            ."{$gw} GW injectés · {$coupled}/{$total} réacteurs couplés · {$load} % de charge\n\n";
+
+        if ($movers !== []) {
+            $parts = array_map(fn (array $m) => $m['plant']->name.' '.$this->signedMw($m['delta']), $movers);
+            $text .= 'Plus fortes variations : '.implode(' · ', $parts)."\n\n";
+        }
+
+        return $text."{$date} — ".self::SITE_TEXT;
+    }
+
+    /**
+     * @param  array{plant: Plant, delta: int, current: int}  $mover
+     */
+    protected function moverAlt(array $mover): string
+    {
+        return $mover['plant']->name.' : '.$this->signedMw($mover['delta'])
+            .' sur la dernière heure — production actuelle '.$this->fr($mover['current']).' MW.';
+    }
+
+    /** Signed MW change, e.g. "+320 MW" / "−150 MW". */
+    protected function signedMw(int $delta): string
+    {
+        return ($delta >= 0 ? '+' : '−').$this->fr(abs($delta)).' MW';
     }
 
     /**

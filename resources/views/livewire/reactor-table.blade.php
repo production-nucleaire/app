@@ -105,7 +105,7 @@
                             <span class="h-1 rounded-sm bg-track overflow-hidden">
                                 <span class="block h-full rounded-sm" style="background:{{ $unit['colorVar'] }}; width:{{ max($unit['pct'], 1) }}%"></span>
                             </span>
-                            <span class="font-mono text-[11px] flex items-center gap-1.5" style="color:{{ $unit['statusVar'] }}">
+                            <span class="font-mono text-[11px] flex items-center gap-1.5 whitespace-nowrap" style="color:{{ $unit['statusVar'] }}">
                                 <span class="w-[7px] h-[7px] rounded-full shrink-0" style="background:{{ $unit['statusVar'] }}"></span>{{ $unit['status'] }}
                             </span>
                             <span class="font-mono text-[11.5px] text-right" style="color:{{ $unit['trendVar'] }}">{{ $unit['trend'] }}</span>

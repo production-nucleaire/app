@@ -29,11 +29,12 @@ class BlueskyService
     }
 
     /**
-     * Post text (with an optional image) and return the created record URI.
+     * Post text (with up to 4 images) and return the created record URI.
      *
+     * @param  array<int,array{path: string, alt?: string}>  $images  Each has a file path and optional alt text.
      * @param  array<int,array<string,mixed>>  $facets  Rich-text facets (links, mentions, tags).
      */
-    public function post(string $text, ?string $imagePath = null, ?string $altText = null, array $facets = []): string
+    public function post(string $text, array $images = [], array $facets = []): string
     {
         $session = $this->createSession();
         $accessJwt = $session['accessJwt'];
@@ -50,15 +51,11 @@ class BlueskyService
             $record['facets'] = $facets;
         }
 
-        if ($imagePath !== null && is_file($imagePath)) {
-            $blob = $this->uploadBlob($accessJwt, (string) file_get_contents($imagePath), 'image/png');
+        $embedImages = $this->buildImageEmbeds($accessJwt, $images);
+        if ($embedImages !== []) {
             $record['embed'] = [
                 '$type' => 'app.bsky.embed.images',
-                'images' => [[
-                    'alt' => $altText ?? '',
-                    'image' => $blob,
-                    'aspectRatio' => ['width' => 1200, 'height' => 630],
-                ]],
+                'images' => $embedImages,
             ];
         }
 
@@ -74,6 +71,42 @@ class BlueskyService
         }
 
         return (string) $response->json('uri');
+    }
+
+    /**
+     * Upload each image (capped at Bluesky's 4-per-post limit) and build the
+     * app.bsky.embed.images entries, deriving mime + aspect ratio from the file.
+     *
+     * @param  array<int,array{path: string, alt?: string}>  $images
+     * @return array<int,array<string,mixed>>
+     */
+    protected function buildImageEmbeds(string $accessJwt, array $images): array
+    {
+        $embeds = [];
+
+        foreach (array_slice($images, 0, 4) as $image) {
+            $path = $image['path'] ?? null;
+            if ($path === null || ! is_file($path)) {
+                continue;
+            }
+
+            $size = @getimagesize($path);
+            $mime = $size['mime'] ?? 'image/png';
+
+            $blob = $this->uploadBlob($accessJwt, (string) file_get_contents($path), $mime);
+
+            $entry = [
+                'alt' => $image['alt'] ?? '',
+                'image' => $blob,
+            ];
+            if ($size !== false) {
+                $entry['aspectRatio'] = ['width' => (int) $size[0], 'height' => (int) $size[1]];
+            }
+
+            $embeds[] = $entry;
+        }
+
+        return $embeds;
     }
 
     /**

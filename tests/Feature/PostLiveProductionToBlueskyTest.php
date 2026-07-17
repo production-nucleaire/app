@@ -3,16 +3,49 @@
 use App\Models\Plant;
 use App\Models\Reactor;
 use App\Models\Record;
+use App\Services\SocialShotService;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 
-function seedNationalFleet(): void
+/** A SocialShotService stub that returns real (tiny) image files, no Browsershot. */
+class FakeSocialShotService extends SocialShotService
 {
-    $plant = Plant::factory()->create(['name' => 'Golfech', 'slug' => 'golfech']);
-    $r1 = Reactor::factory()->for($plant)->create(['reactor_index' => 1, 'net_power_mw' => 1300]);
-    $r2 = Reactor::factory()->for($plant)->create(['reactor_index' => 2, 'net_power_mw' => 1300]);
-    Record::factory()->for($r1)->create(['value' => 1200, 'date' => now()]);
-    Record::factory()->for($r2)->create(['value' => 0, 'date' => now()]);
+    public function home(): ?string
+    {
+        return $this->dummy('home');
+    }
+
+    public function tableau(): ?string
+    {
+        return $this->dummy('tableau');
+    }
+
+    public function plant(Plant $plant): ?string
+    {
+        return $this->dummy('plant-'.$plant->slug);
+    }
+
+    protected function dummy(string $name): string
+    {
+        $path = sys_get_temp_dir().'/bsky-test-'.$name.'.png';
+        file_put_contents($path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='));
+
+        return $path;
+    }
+}
+
+function seedFleetWithMovers(): void
+{
+    // Two plants with two hourly buckets each → two non-zero movers.
+    $a = Plant::factory()->create(['name' => 'Golfech', 'slug' => 'golfech']);
+    $ra = Reactor::factory()->for($a)->create(['reactor_index' => 1, 'net_power_mw' => 1300]);
+    Record::factory()->for($ra)->create(['value' => 800, 'date' => now()->subHour()]);
+    Record::factory()->for($ra)->create(['value' => 1200, 'date' => now()]);   // +400
+
+    $b = Plant::factory()->create(['name' => 'Gravelines', 'slug' => 'gravelines']);
+    $rb = Reactor::factory()->for($b)->create(['reactor_index' => 1, 'net_power_mw' => 900]);
+    Record::factory()->for($rb)->create(['value' => 900, 'date' => now()->subHour()]);
+    Record::factory()->for($rb)->create(['value' => 500, 'date' => now()]);    // -400
 }
 
 function fakeBluesky(): void
@@ -24,33 +57,17 @@ function fakeBluesky(): void
     ]);
 }
 
-it('posts national production to Bluesky with an image and link facet', function () {
+it('posts four live screenshots to Bluesky with alt text and a link facet', function () {
     config()->set('services.bluesky', [
         'identifier' => 'bot.example.com',
         'password' => 'app-pass',
         'base_url' => 'https://bsky.social',
     ]);
-    seedNationalFleet();
+    seedFleetWithMovers();
     fakeBluesky();
+    app()->instance(SocialShotService::class, new FakeSocialShotService);
 
-    // Provide a real national.png so the command doesn't try to render one with
-    // Browsershot; back up and restore any existing dev image.
-    $path = storage_path('app/public/og/national.png');
-    $existed = is_file($path);
-    $backup = $existed ? file_get_contents($path) : null;
-    @mkdir(dirname($path), 0755, true);
-    file_put_contents($path, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='));
-
-    try {
-        $this->artisan('app:post-live-production-to-bluesky')
-            ->assertSuccessful();
-    } finally {
-        if ($existed) {
-            file_put_contents($path, $backup);
-        } else {
-            @unlink($path);
-        }
-    }
+    $this->artisan('app:post-live-production-to-bluesky')->assertSuccessful();
 
     Http::assertSent(fn (Request $r) => str_contains($r->url(), 'com.atproto.server.createSession'));
 
@@ -61,14 +78,17 @@ it('posts national production to Bluesky with an image and link facet', function
 
         $record = $r['record'];
         $text = $record['text'];
+        $images = $record['embed']['images'];
 
         // Link facet byte-slice must equal exactly "electronucleaire.fr".
         $facet = $record['facets'][0];
         $slice = substr($text, $facet['index']['byteStart'], $facet['index']['byteEnd'] - $facet['index']['byteStart']);
 
-        return str_contains($text, 'GW')
-            && $record['embed']['$type'] === 'app.bsky.embed.images'
-            && $record['embed']['images'][0]['alt'] !== ''
+        return $record['embed']['$type'] === 'app.bsky.embed.images'
+            && count($images) === 4                                    // home + tableau + 2 movers
+            && collect($images)->every(fn ($i) => $i['alt'] !== '' && isset($i['aspectRatio']['width']))
+            && str_contains($text, 'GW')
+            && str_contains($text, 'Plus fortes variations')
             && $slice === 'electronucleaire.fr'
             && $facet['features'][0]['uri'] === 'https://electronucleaire.fr';
     });
@@ -76,11 +96,11 @@ it('posts national production to Bluesky with an image and link facet', function
 
 it('fails cleanly when credentials are missing and never hits the network', function () {
     config()->set('services.bluesky', ['identifier' => null, 'password' => null, 'base_url' => 'https://bsky.social']);
-    seedNationalFleet();
+    seedFleetWithMovers();
     Http::fake();
+    app()->instance(SocialShotService::class, new FakeSocialShotService);
 
-    $this->artisan('app:post-live-production-to-bluesky')
-        ->assertFailed();
+    $this->artisan('app:post-live-production-to-bluesky')->assertFailed();
 
     Http::assertNothingSent();
 });
