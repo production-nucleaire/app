@@ -43,14 +43,17 @@ class PostLiveProductionToBluesky extends Command
 
         $text = $this->buildText($stats, $movers);
         $facets = $this->linkFacets($text);
-        $images = $this->collectImages($shots, $movers);
 
-        // Never post with zero images: fall back to the national OG card.
-        if ($images === []) {
-            $this->warn('All screenshots failed; falling back to the national share card.');
-            if ($national = $this->nationalImagePath()) {
-                $images[] = ['path' => $national, 'alt' => $this->buildAltText($stats)];
-            }
+        // National OG card (2x) as the headline image, then live map + table shots.
+        $images = [];
+        if ($card = $this->nationalCardPath()) {
+            $images[] = ['path' => $card, 'alt' => $this->buildAltText($stats)];
+        }
+        if ($home = $shots->home()) {
+            $images[] = ['path' => $home, 'alt' => 'Carte interactive de la production nucléaire française et liste des centrales.'];
+        }
+        if ($table = $shots->tableau()) {
+            $images[] = ['path' => $table, 'alt' => 'Tableau détaillé de la production par centrale et par réacteur (électronucléaire.fr).'];
         }
 
         try {
@@ -67,36 +70,6 @@ class PostLiveProductionToBluesky extends Command
     }
 
     /**
-     * Screenshot the homepage, the table, and each mover's plant page. Each shot
-     * is best-effort; failed ones are simply skipped. Capped at Bluesky's 4.
-     *
-     * @param  array<int,array{plant: Plant, delta: int, current: int}>  $movers
-     * @return array<int,array{path: string, alt: string}>
-     */
-    protected function collectImages(SocialShotService $shots, array $movers): array
-    {
-        $images = [];
-
-        if ($home = $shots->home()) {
-            $images[] = ['path' => $home, 'alt' => 'Carte interactive de la production nucléaire française et liste des centrales.'];
-        }
-        if ($table = $shots->tableau()) {
-            $images[] = ['path' => $table, 'alt' => 'Tableau détaillé de la production par centrale et par réacteur (électronucléaire.fr).'];
-        }
-
-        foreach ($movers as $mover) {
-            if (count($images) >= 4) {
-                break;
-            }
-            if ($shot = $shots->plant($mover['plant'])) {
-                $images[] = ['path' => $shot, 'alt' => $this->moverAlt($mover)];
-            }
-        }
-
-        return $images;
-    }
-
-    /**
      * @param  array<string,mixed>  $stats
      * @param  array<int,array{plant: Plant, delta: int, current: int}>  $movers
      */
@@ -108,24 +81,41 @@ class PostLiveProductionToBluesky extends Command
         $load = $stats['load_factor_pct'];
         $date = now()->locale('fr')->isoFormat('D MMM YYYY').' à '.now()->format('H\hi');
 
+        $headline = "{$gw} GW injectés";
+        if ($trend = $this->hourlyTrend($stats['spark24h'] ?? [])) {
+            $headline .= " ({$trend})";
+        }
+
         $text = "⚛️ Production nucléaire française ⚛️\n\n"
-            ."{$gw} GW injectés · {$coupled}/{$total} réacteurs couplés · {$load} % de charge\n\n";
+            ."{$headline} · {$coupled}/{$total} réacteurs couplés · {$load} % de charge\n\n";
 
         if ($movers !== []) {
             $parts = array_map(fn (array $m) => $m['plant']->name.' '.$this->signedMw($m['delta']), $movers);
-            $text .= 'Plus fortes variations : '.implode(' · ', $parts)."\n\n";
+            $text .= 'Plus fortes variations sur la dernière heure : '.implode(' · ', $parts)."\n\n";
         }
 
         return $text."{$date} — ".self::SITE_TEXT;
     }
 
     /**
-     * @param  array{plant: Plant, delta: int, current: int}  $mover
+     * National hourly trend from the 24h spark buckets, e.g. "▲ +0,3 GW/h".
+     * Null when there aren't two buckets or the change rounds to zero.
+     *
+     * @param  array<int,int>  $spark
      */
-    protected function moverAlt(array $mover): string
+    protected function hourlyTrend(array $spark): ?string
     {
-        return $mover['plant']->name.' : '.$this->signedMw($mover['delta'])
-            .' sur la dernière heure — production actuelle '.$this->fr($mover['current']).' MW.';
+        $n = count($spark);
+        if ($n < 2) {
+            return null;
+        }
+
+        $deltaGw = round(($spark[$n - 1] - $spark[$n - 2]) / 1000, 1);
+        if ($deltaGw === 0.0) {
+            return null;
+        }
+
+        return ($deltaGw > 0 ? '▲ +' : '▼ −').$this->fr(abs($deltaGw), 1).' GW/h';
     }
 
     /** Signed MW change, e.g. "+320 MW" / "−150 MW". */
@@ -174,13 +164,13 @@ class PostLiveProductionToBluesky extends Command
     }
 
     /**
-     * Path to the national share card, rendering it first if it's missing.
+     * Path to the national share card, preferring the @2x variant. Re-renders it
+     * fresh so the posted card matches "now" (skipped under tests). Falls back to
+     * the 1x file, then null.
      */
-    protected function nationalImagePath(): ?string
+    protected function nationalCardPath(): ?string
     {
-        $path = storage_path('app/public/'.ShareImageService::DIR.'/national.png');
-
-        if (! is_file($path)) {
+        if (! app()->runningUnitTests()) {
             try {
                 ShareImageService::national();
             } catch (\Throwable $e) {
@@ -188,13 +178,16 @@ class PostLiveProductionToBluesky extends Command
             }
         }
 
-        if (! is_file($path)) {
-            $this->warn('National share image not found; posting text only.');
-
-            return null;
+        foreach (['national@2x.png', 'national.png'] as $name) {
+            $path = storage_path('app/public/'.ShareImageService::DIR.'/'.$name);
+            if (is_file($path)) {
+                return $path;
+            }
         }
 
-        return $path;
+        $this->warn('National share image not found.');
+
+        return null;
     }
 
     /** French number formatting: space thousands, comma decimals. */

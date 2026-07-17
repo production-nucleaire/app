@@ -57,7 +57,7 @@ function fakeBluesky(): void
     ]);
 }
 
-it('posts four live screenshots to Bluesky with alt text and a link facet', function () {
+it('posts the national card plus map and table screenshots with alt text and a link facet', function () {
     config()->set('services.bluesky', [
         'identifier' => 'bot.example.com',
         'password' => 'app-pass',
@@ -67,7 +67,18 @@ it('posts four live screenshots to Bluesky with alt text and a link facet', func
     fakeBluesky();
     app()->instance(SocialShotService::class, new FakeSocialShotService);
 
-    $this->artisan('app:post-live-production-to-bluesky')->assertSuccessful();
+    // Provide the national @2x card on disk (render is skipped under tests); back up any real one.
+    $card = storage_path('app/public/og/national@2x.png');
+    $existed = is_file($card);
+    $backup = $existed ? file_get_contents($card) : null;
+    @mkdir(dirname($card), 0755, true);
+    file_put_contents($card, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='));
+
+    try {
+        $this->artisan('app:post-live-production-to-bluesky')->assertSuccessful();
+    } finally {
+        $existed ? file_put_contents($card, $backup) : @unlink($card);
+    }
 
     Http::assertSent(fn (Request $r) => str_contains($r->url(), 'com.atproto.server.createSession'));
 
@@ -85,7 +96,7 @@ it('posts four live screenshots to Bluesky with alt text and a link facet', func
         $slice = substr($text, $facet['index']['byteStart'], $facet['index']['byteEnd'] - $facet['index']['byteStart']);
 
         return $record['embed']['$type'] === 'app.bsky.embed.images'
-            && count($images) === 4                                    // home + tableau + 2 movers
+            && count($images) === 3                                    // national card + map + table
             && collect($images)->every(fn ($i) => $i['alt'] !== '' && isset($i['aspectRatio']['width']))
             && str_contains($text, 'GW')
             && str_contains($text, 'Plus fortes variations')
