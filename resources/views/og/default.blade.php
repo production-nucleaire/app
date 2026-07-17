@@ -2,7 +2,7 @@
 <x-og.layout :dark="true">
     <div style="width:1200px; height:630px; background:#0f2c3b; position:relative; display:flex; overflow:hidden;">
         <div style="margin:auto; text-align:center; position:relative; z-index:2; padding-bottom:40px;">
-            <div style="width:68px; height:68px; border-radius:19px; background:#fff; display:inline-grid; place-items:center; box-shadow:0 4px 20px rgba(0,0,0,0.25);"><div style="width:22px; height:22px; border-radius:50%; background:#0d8a4f;"></div></div>
+            <div style="display:inline-block; border-radius:19px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.25);">{!! \App\Support\OgSvg::logo(68) !!}</div>
             <div style="font:700 58px 'Instrument Sans',sans-serif; color:#fff; margin-top:26px; letter-spacing:-0.01em;">électronucléaire<span style="color:#7fd4a8;">.fr</span></div>
             <div style="font:400 23px 'Instrument Sans',sans-serif; color:#9fb3bd; margin-top:12px;">La production du parc nucléaire français, heure par heure</div>
             <div style="display:flex; justify-content:center; gap:14px; margin-top:30px; font:500 15px 'Spline Sans Mono',monospace; color:#6f8896;">

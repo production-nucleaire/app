@@ -6,6 +6,11 @@
 
         <title>L’Atome Français - Suivi de la production électro-nucléaire française heure par heure</title>
 
+        {{-- Favicons (logo.svg for modern browsers, .ico + apple-touch fallbacks) --}}
+        <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="32x32">
+        <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
+
         {{-- Open Graph / Twitter share card (image rendered by ShareImageService) --}}
         @php
             $og = \App\Support\OgImage::forCurrentRoute();

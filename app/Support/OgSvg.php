@@ -142,6 +142,32 @@ class OgSvg
             : ['coupled' => '#0d8a4f', 'partial' => '#5fb98a', 'off' => '#c3ccc7', 'neg' => '#b5471d'];
     }
 
+    /** Cached raw markup of the brand icon (resources/images/logo.svg). */
+    protected static ?string $logo = null;
+
+    /**
+     * The static brand icon (logo.svg) inlined at a fixed pixel size, for the
+     * OG card headers. The file's own width/height are stripped so our size
+     * wins; the artwork keeps its baked colours and rounded corners.
+     */
+    public static function logo(int $size): string
+    {
+        if (self::$logo === null) {
+            $svg = file_get_contents(resource_path('images/logo.svg'));
+            $svg = preg_replace('/<\?xml.*?\?>/s', '', $svg);
+            $svg = preg_replace('/<!--.*?-->/s', '', $svg);
+            $svg = preg_replace('/\s(?:width|height)="[^"]*"/', '', $svg, 2);
+            self::$logo = trim($svg);
+        }
+
+        return preg_replace(
+            '/<svg\b/',
+            '<svg width="'.$size.'" height="'.$size.'" style="display:block"',
+            self::$logo,
+            1
+        );
+    }
+
     /**
      * Quadratic-Bézier smoothing shared by the charts. Returns [linePath,
      * areaPath]; the area drops to $baseline and closes.

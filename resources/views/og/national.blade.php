@@ -14,7 +14,7 @@
     {{-- Right: figures --}}
     <div style="flex:1; min-width:0; background:var(--card); padding:38px 48px 30px; display:flex; flex-direction:column;">
         <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:30px; height:30px; border-radius:9px; background:var(--brand); display:grid; place-items:center;"><div style="width:10px; height:10px; border-radius:50%; background:var(--brand-dot);"></div></div>
+            {!! \App\Support\OgSvg::logo(30) !!}
             <div style="font:700 20px 'Instrument Sans',sans-serif; color:var(--ink);">électronucléaire<span style="color:var(--muted-3);">.fr</span></div>
             <div style="flex:1;"></div>
             <div style="font:500 15px 'Spline Sans Mono',monospace; color:var(--muted-3);">{{ $dateLabel }}</div>
