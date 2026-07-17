@@ -281,6 +281,9 @@ class ShareImageService
         if (! empty($cfg['node_module_path'])) {
             $shot->setNodeModulePath($cfg['node_module_path']);
         }
+        if (! empty($cfg['chromium_arguments'])) {
+            $shot->addChromiumArguments(explode(',', $cfg['chromium_arguments'] ?? []));
+        }
 
         return $shot;
     }
