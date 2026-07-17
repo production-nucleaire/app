@@ -4,7 +4,7 @@ namespace App\Support;
 
 class Sparkline
 {
-    public static function render(array $points, int $width = 150, int $height = 34, string $stroke = '#124a63', string $fill = 'rgba(18,74,99,0.08)', array $labels = []): string
+    public static function render(array $points, int $width = 150, int $height = 34, string $stroke = '#124a63', string $fill = 'rgba(18,74,99,0.08)', array $labels = [], bool $dot = true): string
     {
         $count = count($points);
         if ($count < 2) {
@@ -28,6 +28,10 @@ class Sparkline
         $area = $line.' '.($width - $pad).','.($height - $lb).' '.$pad.','.($height - $lb);
         $last = end($coords);
 
+        // The dot is skipped for full-width cards (preserveAspectRatio="none" would stretch
+        // it into an ellipse); a stretched line/area is fine, the dot is not.
+        $dotSvg = $dot ? "<circle cx=\"{$last[0]}\" cy=\"{$last[1]}\" r=\"3\" fill=\"{$stroke}\" />" : '';
+
         $labelSvg = '';
         if ($labels) {
             $n = count($labels);
@@ -43,7 +47,7 @@ class Sparkline
             <svg viewBox="0 0 {$width} {$height}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:{$height}px">
                 <polygon points="{$area}" fill="{$fill}" />
                 <polyline points="{$line}" fill="none" stroke="{$stroke}" stroke-width="2" />
-                <circle cx="{$last[0]}" cy="{$last[1]}" r="3" fill="{$stroke}" />
+                {$dotSvg}
                 {$labelSvg}
             </svg>
         SVG;

@@ -4,18 +4,31 @@
 @endphp
 
 <div class="w-full h-full overflow-auto bg-panel p-4 md:p-5">
-    <div class="flex items-center gap-4 flex-wrap">
+    @php $custom = $from && $to; @endphp
+    <div class="flex items-center gap-3 flex-wrap">
         <h1 class="font-sans font-bold text-[18px] text-ink">Production nucléaire nationale</h1>
         <div class="flex-1"></div>
         <div class="flex gap-0.5 border border-line rounded-lg p-0.5 bg-surface font-mono text-[11.5px]">
             @foreach ($this->rangeKeys() as $key)
-                <button type="button" wire:click="$set('range', @js($key))" wire:key="range-{{ $loop->index }}"
+                <button type="button" wire:click="selectRange(@js($key))" wire:key="range-{{ $loop->index }}"
                     @class([
                         'px-3 py-1 rounded-md transition-colors',
-                        'bg-brand text-white' => $range === $key,
-                        'text-faint hover:text-ink' => $range !== $key,
+                        'bg-brand text-white' => ! $custom && $range === $key,
+                        'text-faint hover:text-ink' => $custom || $range !== $key,
                     ])>{{ $key }}</button>
             @endforeach
+        </div>
+        <div @class([
+            'flex items-center gap-1.5 font-mono text-[11.5px] border rounded-lg px-2 py-1 bg-surface',
+            'border-brand text-ink' => $custom,
+            'border-line text-muted' => ! $custom,
+        ])>
+            <span>du</span>
+            <input type="date" wire:model.live="from" max="{{ now()->format('Y-m-d') }}"
+                class="bg-transparent text-ink outline-none [color-scheme:light] dark:[color-scheme:dark]">
+            <span>au</span>
+            <input type="date" wire:model.live="to" max="{{ now()->format('Y-m-d') }}"
+                class="bg-transparent text-ink outline-none [color-scheme:light] dark:[color-scheme:dark]">
         </div>
     </div>
 
@@ -60,14 +73,15 @@
 @script
     <script>
         const historyEl = document.getElementById('history-chart');
+        const historyMeta = @js(['len' => $this->currentLen(), 'minTime' => $this->minTime()]);
         if (historyEl && window.createHistoryChart) {
-            createHistoryChart(historyEl, @js($this->points()));
+            createHistoryChart(historyEl, @js($this->points()), historyMeta);
         }
 
         $wire.on('history-updated', (event) => {
-            const points = event.points ?? (Array.isArray(event) ? event[0]?.points : null);
-            if (historyEl && window.createHistoryChart && points) {
-                createHistoryChart(historyEl, points);
+            const e = Array.isArray(event) ? event[0] : event;
+            if (historyEl && window.createHistoryChart && e && e.points) {
+                createHistoryChart(historyEl, e.points, { len: e.len, minTime: e.minTime });
             }
         });
     </script>

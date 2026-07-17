@@ -4,8 +4,8 @@
 @endphp
 
 <header class="shrink-0 h-16 bg-surface border-b border-line flex items-center gap-4 md:gap-5 px-4 md:px-5">
-    <a href="{{ route('home') }}" wire:navigate class="flex items-center gap-2.5 shrink-0">
-        <span class="w-6 h-6 rounded-[7px] bg-brand grid place-items-center">
+    <a href="{{ route('home') }}" wire:navigate class="js-logo flex items-center gap-2.5 shrink-0">
+        <span class="js-fizz w-6 h-6 rounded-[7px] bg-brand grid place-items-center cursor-pointer" title="⚛">
             <span class="w-2 h-2 rounded-full bg-accent-light"></span>
         </span>
         <span class="font-sans font-bold text-[15px] text-ink hidden sm:inline">

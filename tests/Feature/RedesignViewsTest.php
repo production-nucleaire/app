@@ -1,5 +1,7 @@
 <?php
 
+use App\Livewire\History;
+use App\Livewire\PlantMap;
 use App\Models\Plant;
 use App\Models\Reactor;
 use App\Models\Record;
@@ -82,6 +84,35 @@ it('renders the historique view', function () {
         ->assertOk()
         ->assertSee('Production nucléaire nationale')
         ->assertSee('FACTEUR DE CHARGE MOYEN');
+});
+
+it('respects a custom du/au date range on historique', function () {
+    seedPlant('Testville', 'centrale-de-test', [900, 900], [880, 10]);
+
+    $from = now()->subHours(24)->format('Y-m-d');
+    $to = now()->format('Y-m-d');
+
+    $this->get("/historique?du={$from}&au={$to}")
+        ->assertOk()
+        ->assertSee('Production nucléaire nationale');
+
+    // The custom window (<= 2 days) resolves to hourly points with data.
+    $component = new History;
+    $component->from = $from;
+    $component->to = $to;
+
+    expect($component->points())->not->toBeEmpty();
+});
+
+it('opens a plant preview and nudges the nap easter egg for a consuming plant', function () {
+    seedPlant('Napville', 'centrale-napville', [900, 900], [-3, 0]);
+
+    $plant = Plant::firstWhere('slug', 'centrale-napville');
+
+    Livewire\Livewire::test(PlantMap::class)
+        ->call('openPreview', $plant->id)
+        ->assertSet('previewPlantId', $plant->id)
+        ->assertDispatched('easter-nap');
 });
 
 it('computes national stats', function () {

@@ -4,8 +4,13 @@ namespace App\Livewire;
 
 use App\Models\Plant;
 use App\Models\Reactor;
+use App\Models\Record;
 use App\Services\ReactorSeries;
+use App\Support\Sparkline;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 
 class PlantMap extends Component
@@ -13,6 +18,8 @@ class PlantMap extends Component
     public int $selectedPlantId = 0;
 
     public int $selectedReactorId = 0;
+
+    public int $previewPlantId = 0;
 
     public ?Plant $previousPlant = null;
 
@@ -62,6 +69,55 @@ class PlantMap extends Component
         $this->nextPlant = $this->plants->get($index + 1);
     }
 
+    /**
+     * Open the sidebar preview for a plant (from a list row or a map marker). Nudges the
+     * napping-plant easter egg when the plant is currently consuming.
+     */
+    public function openPreview(int $plantId): void
+    {
+        $this->previewPlantId = $plantId;
+
+        $plant = $this->plants->firstWhere('id', $plantId);
+        if ($plant && $plant->latest_production_mw < 0) {
+            $this->dispatch('easter-nap', name: $plant->name);
+        }
+    }
+
+    #[On('preview-plant')]
+    public function previewFromMarker($plantId): void
+    {
+        $this->openPreview((int) $plantId);
+    }
+
+    #[Computed]
+    public function previewPlant(): ?Plant
+    {
+        return $this->previewPlantId
+            ? $this->plants->firstWhere('id', $this->previewPlantId)
+            : null;
+    }
+
+    /** 24h production sparkline (SVG) for the previewed plant. */
+    public function previewSpark(): string
+    {
+        $plant = $this->previewPlant();
+        if (! $plant) {
+            return '';
+        }
+
+        $points = Record::query()
+            ->whereIn('reactor_id', $plant->reactors->pluck('id'))
+            ->whereBetween('date', [now()->subHours(24), now()])
+            ->orderBy('date')
+            ->get(['date', 'value'])
+            ->groupBy(fn (Record $r) => $r->date->format('Y-m-d H'))
+            ->map(fn (Collection $g) => (int) $g->sum('value'))
+            ->values()
+            ->all();
+
+        return Sparkline::render($points, 300, 60, '#0d8a4f', 'rgba(13,138,79,0.10)');
+    }
+
     #[Computed]
     public function markers()
     {
@@ -106,6 +162,22 @@ class PlantMap extends Component
             now()->subDays(30),
             now(),
         );
+    }
+
+    /**
+     * Earliest record timestamp (unix seconds) for the selected plant — the floor for the
+     * chart's "load older on drag" so it stops requesting once no older data can exist.
+     */
+    #[Computed]
+    public function reactorMinTime(): ?int
+    {
+        if (! $this->selectedPlant) {
+            return null;
+        }
+
+        $min = Record::whereIn('reactor_id', $this->selectedPlant->reactors->pluck('id'))->min('date');
+
+        return $min ? Carbon::parse($min)->timestamp : null;
     }
 
     public function render()

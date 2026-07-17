@@ -3,6 +3,7 @@
 use App\Livewire\History;
 use App\Livewire\PlantMap;
 use App\Models\Plant;
+use App\Services\NationalSeries;
 use App\Services\ReactorSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -28,6 +29,19 @@ Route::get('/api/plants/{plant:slug}/records', function (Plant $plant, Request $
         ReactorSeries::between($plant->load('reactors'), $start, $end)
     );
 })->name('api.plant.records');
+
+// Lazy "load older" data source for the national Historique chart.
+Route::get('/api/history', function (Request $request) {
+    $len = (int) $request->query('len', 10);
+    $end = Carbon::createFromTimestamp((int) $request->query('end', now()->timestamp));
+    $start = Carbon::createFromTimestamp((int) $request->query('start', $end->copy()->subDays(30)->timestamp));
+
+    if ($start->greaterThanOrEqualTo($end)) {
+        return response()->json([]);
+    }
+
+    return response()->json(NationalSeries::between($start, $end, $len));
+})->name('api.history');
 
 Route::get('/a-propos', fn () => view('welcome'))
     ->name('welcome');

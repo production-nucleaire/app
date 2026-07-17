@@ -71,6 +71,70 @@
     animation: pulse-dot 2s infinite;
 }
 
+/* ---- Easter eggs ---- */
+.nuc-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 60px;
+    transform: translateX(-50%);
+    z-index: 3000;
+    background: #14232b;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.28);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+    animation: nuc-toast-in 0.35s ease;
+    pointer-events: none;
+}
+
+@keyframes nuc-toast-in {
+    from { transform: translate(-50%, 12px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
+}
+
+.nuc-spin { animation: nuc-spin 1.1s ease-in-out; }
+@keyframes nuc-spin {
+    to { transform: rotate(360deg); }
+}
+
+.nuc-particle {
+    position: fixed;
+    z-index: 3000;
+    color: var(--color-accent);
+    font-size: 14px;
+    pointer-events: none;
+    animation: nuc-fizz 0.85s ease-out forwards;
+}
+@keyframes nuc-fizz {
+    0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); opacity: 0; }
+}
+
+.nuc-rain {
+    position: fixed;
+    top: -40px;
+    z-index: 3000;
+    color: var(--color-accent);
+    pointer-events: none;
+    animation: nuc-fall linear forwards;
+}
+@keyframes nuc-fall {
+    0% { transform: translateY(-40px) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.9; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+}
+
+.leaflet-marker-icon.nuc-ripple { animation: nuc-ripple 0.7s ease-out; }
+@keyframes nuc-ripple {
+    0% { filter: drop-shadow(0 0 0 rgba(13, 138, 79, 0.7)); transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { filter: drop-shadow(0 0 14px rgba(13, 138, 79, 0)); transform: scale(1); }
+}
+
 button {
     @apply cursor-pointer transition-colors duration-200 ease-in-out;
 }

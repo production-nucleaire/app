@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Plant;
 use App\Models\Record;
+use App\Services\NationalSeries;
 use App\Support\LoadColor;
 use App\Support\Sparkline;
 use Illuminate\Support\Carbon;
@@ -17,6 +18,12 @@ class History extends Component
     #[Url(as: 'periode')]
     public string $range = '30 j';
 
+    #[Url(as: 'du')]
+    public ?string $from = null;
+
+    #[Url(as: 'au')]
+    public ?string $to = null;
+
     /**
      * Bucket granularity (substr length on the stored date) per range.
      */
@@ -25,27 +32,27 @@ class History extends Component
         return [
             '24 h' => [
                 'len' => 13,
-                'start' => now()->subHours(24)
+                'start' => now()->subHours(24),
             ],
             '7 j' => [
                 'len' => 13,
-                'start' => now()->subDays(7)
+                'start' => now()->subDays(7),
             ],
             '30 j' => [
                 'len' => 10,
-                'start' => now()->subDays(30)
+                'start' => now()->subDays(30),
             ],
             '12 mois' => [
                 'len' => 7,
-                'start' => now()->subMonths(12)
+                'start' => now()->subMonths(12),
             ],
             '5 ans' => [
                 'len' => 7,
-                'start' => now()->subYears(5)
+                'start' => now()->subYears(5),
             ],
             'Max' => [
                 'len' => 7,
-                'start' => null
+                'start' => null,
             ],
         ];
     }
@@ -55,21 +62,66 @@ class History extends Component
         return array_keys($this->ranges());
     }
 
-    public function updatedRange(): void
+    /** Activate a preset and drop any custom range (they are mutually exclusive). */
+    public function selectRange(string $key): void
     {
-        // wire:ignore keeps the chart div, so push fresh points to the client JS.
-        $this->dispatch('history-updated', points: $this->points());
+        $this->range = $key;
+        $this->from = null;
+        $this->to = null;
+        $this->pushChart();
     }
 
+    public function updated($property): void
+    {
+        // wire:ignore keeps the chart div, so push fresh points to the client JS.
+        if (in_array($property, ['range', 'from', 'to'], true)) {
+            $this->pushChart();
+        }
+    }
+
+    /** Re-hydrate the wire:ignore chart with the current window's data + lazy-load metadata. */
+    protected function pushChart(): void
+    {
+        $this->dispatch('history-updated',
+            points: $this->points(),
+            len: $this->currentLen(),
+            minTime: $this->minTime(),
+        );
+    }
+
+    /**
+     * Resolve the active window: a custom du/au range (auto granularity by span) takes
+     * precedence over the selected preset. Returns len (substr bucket size), start and end.
+     */
     protected function config(): array
     {
+        if ($this->from && $this->to) {
+            $start = Carbon::parse($this->from)->startOfDay();
+            $end = Carbon::parse($this->to)->endOfDay();
+            if ($end->lessThan($start)) {
+                [$start, $end] = [$end->copy()->startOfDay(), $start->copy()->endOfDay()];
+            }
+
+            $days = $start->diffInDays($end);
+            $len = $days <= 2 ? 13 : ($days <= 60 ? 10 : 7);
+
+            return ['len' => $len, 'start' => $start, 'end' => $end];
+        }
+
         $ranges = $this->ranges();
         $cfg = $ranges[$this->range] ?? $ranges['30 j'];
         $cfg['start'] = $cfg['start'] ?? (Record::min('date')
             ? Carbon::parse(Record::min('date'))
             : now()->subYears(2));
+        $cfg['end'] = now();
 
         return $cfg;
+    }
+
+    /** Cache suffix that varies with the active window (preset or custom du/au). */
+    protected function cacheKey(string $prefix): string
+    {
+        return $prefix.'_'.$this->range.'_'.($this->from ?? '').'_'.($this->to ?? '');
     }
 
     /**
@@ -82,38 +134,23 @@ class History extends Component
     #[Computed]
     public function points(): array
     {
-        ['len' => $len, 'start' => $start] = $this->config();
+        ['len' => $len, 'start' => $start, 'end' => $end] = $this->config();
 
-        return cache()->remember("history_points_{$this->range}", now()->addMinutes(15), function () use ($len, $start) {
-            $perReactor = DB::table('records')
-                ->where('date', '>=', $start)
-                ->selectRaw('substr(date, 1, '.$len.') as bucket, reactor_id, avg(value) as ravg')
-                ->groupBy('bucket', 'reactor_id');
-
-            $rows = DB::query()
-                ->fromSub($perReactor, 't')
-                ->selectRaw('bucket, sum(ravg) as total')
-                ->groupBy('bucket')
-                ->orderBy('bucket')
-                ->get();
-
-            return $rows->map(fn ($row) => [
-                'time' => $this->bucketTimestamp($row->bucket, $len),
-                'value' => round($row->total / 1000, 2),
-            ])->values()->all();
-        });
+        return NationalSeries::between($start, $end, $len);
     }
 
-    /**
-     * Parse a substr bucket key ('Y-m-d H' | 'Y-m-d' | 'Y-m') to a unix timestamp.
-     */
-    protected function bucketTimestamp(string $bucket, int $len): int
+    /** Bucket granularity of the active window — the client fetches "load older" at this len. */
+    public function currentLen(): int
     {
-        return match ($len) {
-            13 => Carbon::createFromFormat('Y-m-d H', $bucket)->timestamp,
-            10 => Carbon::createFromFormat('Y-m-d', $bucket)->startOfDay()->timestamp,
-            default => Carbon::createFromFormat('Y-m', $bucket)->startOfMonth()->timestamp,
-        };
+        return $this->config()['len'];
+    }
+
+    /** Earliest national record timestamp (unix seconds) — floor for the chart's load-older. */
+    public function minTime(): ?int
+    {
+        $min = Record::min('date');
+
+        return $min ? Carbon::parse($min)->timestamp : null;
     }
 
     /**
@@ -129,7 +166,7 @@ class History extends Component
                 'avg' => 0,
                 'min' => 0,
                 'max' => 0,
-                'fdc' => 0
+                'fdc' => 0,
             ];
         }
 
@@ -153,13 +190,14 @@ class History extends Component
     #[Computed]
     public function minis(): array
     {
-        ['len' => $len, 'start' => $start] = $this->config();
+        ['len' => $len, 'start' => $start, 'end' => $end] = $this->config();
 
-        $buckets = cache()->remember("history_minis_{$this->range}", now()->addMinutes(15), function () use ($len, $start) {
+        $buckets = cache()->remember($this->cacheKey('history_minis'), now()->addMinutes(15), function () use ($len, $start, $end) {
             // Average per reactor per bucket (dedupe), then sum per plant per bucket.
             $perReactor = DB::table('records')
                 ->join('reactors', 'records.reactor_id', '=', 'reactors.id')
                 ->where('records.date', '>=', $start)
+                ->where('records.date', '<=', $end)
                 ->selectRaw('reactors.plant_id as pid, reactors.id as rid, substr(records.date, 1, '.$len.') as bucket, avg(records.value) as ravg')
                 ->groupBy('pid', 'rid', 'bucket');
 
@@ -190,7 +228,7 @@ class History extends Component
                     'name' => $plant->name,
                     'pct' => $pct,
                     'color' => 'var('.$token.')',
-                    'spark' => Sparkline::render($totals, 190, 42, $hex, 'rgba(18,74,99,0.06)'),
+                    'spark' => Sparkline::render($totals, 190, 42, $hex, 'rgba(18,74,99,0.06)', dot: false),
                 ];
             })
             ->values()
