@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg data-dc-tpl="14" width="72" height="72" viewBox="0 0 48 48">
+    <rect data-dc-tpl="15" x="2" y="2" width="44" height="44" rx="12" fill="#124a63"></rect>
+    <circle data-dc-tpl="16" cx="29" cy="19" r="6.5" fill="#7fd4a8"></circle>
+    <circle data-dc-tpl="17" cx="29" cy="19" r="6.5" fill="none" stroke="#7fd4a8" stroke-width="1.5" style="transform-box: fill-box; transform-origin: center center; animation: 2.6s ease-out 0s infinite normal none running logoPulse;"></circle>
+</svg>

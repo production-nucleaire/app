@@ -5,15 +5,17 @@
 
 <header class="shrink-0 h-16 bg-surface border-b border-line flex items-center gap-4 md:gap-5 px-4 md:px-5">
     <a href="{{ route('home') }}" wire:navigate class="js-logo flex items-center gap-2.5 shrink-0">
-        <span class="js-fizz w-6 h-6 rounded-[7px] bg-brand grid place-items-center cursor-pointer" title="⚛">
-            <span class="w-2 h-2 rounded-full bg-accent-light"></span>
-        </span>
+        <svg data-dc-tpl="14" width="32" height="32" viewBox="0 0 48 48">
+            <rect data-dc-tpl="15" x="2" y="2" width="44" height="44" rx="12" fill="#124a63"></rect>
+            <circle data-dc-tpl="16" cx="29" cy="19" r="6.5" fill="#7fd4a8"></circle>
+            <circle data-dc-tpl="17" cx="29" cy="19" r="6.5" fill="none" stroke="#7fd4a8" stroke-width="1.5" style="transform-box: fill-box; transform-origin: center center; animation: 2.6s ease-out 0s infinite normal none running logo-pulse;"></circle>
+        </svg>
         <span class="font-sans font-bold text-[15px] text-ink hidden sm:inline">
-            électronucléaire<span class="text-faint">.fr</span>
+            électronucléaire<span class="text-accent">.fr</span>
         </span>
     </a>
 
-    <nav class="flex gap-1 bg-panel rounded-lg p-[3px] text-[12.5px] font-medium">
+    <nav class="flex gap-1 bg-panel rounded-lg p-[3px] text-[12.5px] font-medium whitespace-nowrap">
         @php
             $tabBase = 'px-3 md:px-3.5 py-[5px] rounded-[7px] transition-colors';
             $tabActive = 'bg-surface text-ink shadow-sm';
